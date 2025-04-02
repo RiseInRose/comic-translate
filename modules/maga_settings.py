@@ -118,6 +118,8 @@ class PSettings:
                 return {
                     'api_key': self.credentials.credentials.get(f"{service}_api_key"),
                     'api_url': self.credentials.credentials.get(f"{service}_api_url"),
+                    'openai_api_key': self.credentials.credentials.get(f"{service}_openai_api_key"),
+                    'openai_api_url': self.credentials.credentials.get(f"{service}_openai_api_url"),
                     'model': self.credentials.credentials.get(f"{service}_model"),
                     'save_key': True
                 }
