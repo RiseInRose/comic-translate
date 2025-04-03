@@ -83,7 +83,7 @@ class Settings:
         # self.settings_page.tools.translator = 'Deepseek'
         # self.settings_page.credentials.credentials['Deepseek_api_key'] = 'sk-91043ea797ae460680043f6964239dc1'
         self.settings_page.tools.translator = 'Custom'
-        self.settings_page.credentials.credentials['Custom_api_key'] = 'sk-6rPJZBY5dUqPvwEaCf4353CaC9Ae465091Ac2a79510187Dc'
+        self.settings_page.credentials.credentials['Custom_api_key'] = 'sk-jrKOlAUbyydnF6ve4e751a56Cb564eAd90A100671942Ae7c'#'sk-6rPJZBY5dUqPvwEaCf4353CaC9Ae465091Ac2a79510187Dc'
         self.settings_page.credentials.credentials['Custom_api_url'] = 'https://api.mixrai.com/v1'
         self.settings_page.credentials.credentials['Custom_model'] = 'gpt-3.5-turbo'
         self.settings_page.credentials.credentials['Custom_openai_api_key'] = os.getenv('comic_open_api_key')
