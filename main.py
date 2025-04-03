@@ -37,7 +37,7 @@ class Settings:
     render_settings: RenderSettings = None
     settings_page: PSettings = None
 
-    def __init__(self, target_language):
+    def __init__(self, source_language, target_language):
         self.settings_page = PSettings()
 
         if self.lang_mapping is None:
@@ -89,7 +89,7 @@ class Settings:
         self.settings_page.credentials.credentials['Custom_openai_api_key'] = os.getenv('comic_open_api_key')
         self.settings_page.credentials.credentials['Custom_openai_api_url'] = 'https://api.openai.com/v1'
 
-        self.settings_page.llm.extra_context = f'''You are an expert translator who translates Japanese to {target_language}. You pay attention to style, formality, idioms, slang etc and try to convey it in the way a {target_language} speaker would understand.\n        BE MORE NATURAL. NEVER USE 당신, 그녀, 그 or its Japanese equivalen        Specifically, you will be translating text OCR'd from a comic. The OCR is not perfect and as such you may receive text with typos or other mistakes.\n        To aid you and provide context, You may be given the image of the page and/or extra context about the comic. You will be given a json string of the detected text blocks and the text to translate. Return the json string with the texts translated. DO NOT translate the keys of the json. For each block:\n        - If it's already in {target_language}, OUTPUT IT AS IT IS instead\n        - DO NOT give explanations\n        Do Your Best! I'm really counting on you.'''
+        self.settings_page.llm.extra_context = f'''You are an expert translator who translates {source_language} to {target_language}. You pay attention to style, formality, idioms, slang etc and try to convey it in the way a {target_language} speaker would understand.\n        BE MORE NATURAL. NEVER USE 당신, 그녀, 그 or its {source_language} equivalen        Specifically, you will be translating text OCR'd from a comic. The OCR is not perfect and as such you may receive text with typos or other mistakes.\n        To aid you and provide context, You may be given the image of the page and/or extra context about the comic. You will be given a json string of the detected text blocks and the text to translate. Return the json string with the texts translated. DO NOT translate the keys of the json. For each block:\n        - If it's already in {target_language}, OUTPUT IT AS IT IS instead\n        - DO NOT give explanations\n        Do Your Best! I'm really counting on you.'''
 
 def main():
     if len(sys.argv) < 2:
@@ -105,15 +105,16 @@ def main():
         print("未找到有效的图片文件")
         return
 
+    source_language = 'Japanese'
     target_language = 'Chinese' # 'English' #
     # 构造基本设置
-    settings = Settings(target_language)
+    settings = Settings(source_language, target_language)
     
     # 构造图片状态信息
     image_states = {}
     for image_path in image_files:
         image_states[image_path] = {
-            'source_lang': 'Japanese',  # 默认源语言
+            'source_lang': source_language,  # 默认源语言
             'target_lang': target_language,  # 目标语言
             'viewer_state': {}
         }
@@ -136,7 +137,7 @@ def run(input_path, output_path, target_language, source_language='Japanese'):
         image_files.append(full_image_name)
 
     # 构造基本设置
-    settings = Settings(target_language)
+    settings = Settings(source_language, target_language)
 
     # 构造图片状态信息
     image_states = {}
@@ -166,9 +167,9 @@ if __name__ == '__main__':
     image_path = sys.argv[1]
     input_image = cv2.imread(image_path)
 
-    source_language = 'English'
+    source_language = 'Russian'
     target_language = 'Simplified Chinese'  # 'Korean' # 'Simplified Chinese' # 'Chinese' # 'English' #'Traditional Chinese' #
-    settings = Settings(target_language)
+    settings = Settings(source_language, target_language)
     processor = BatchProcessor()
     # flag, output_image = processor.process_one_image(settings, input_image, 'Japanese', target_language)
     flag, output_image = processor.process_one_image(settings, input_image, source_language, target_language)
