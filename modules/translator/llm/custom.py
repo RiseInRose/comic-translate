@@ -65,20 +65,30 @@ class CustomTranslation(BaseLLMTranslation):
         i = 0
         while i < 3:
             try:
-                response = requests.request("POST", f"{api_url}/chat/completions", headers=headers,
-                                            data=payload)
+                response = requests.request("POST", f"{api_url}/chat/completions", headers=headers, data=payload)
 
                 data = response.json()
                 print(data)
                 s = data.get('choices', [])[0].get('message').get('content')
                 return s
             except Exception as ex:
-                # 直连openai备用key
-                api_url = self.openai_api_url
-                headers["Authorization"] = f"Bearer {self.openai_api_key}"
-
                 print('-------trans fail-------')
                 print(ex)
+                # # 直连openai备用key
+                # api_url = self.openai_api_url
+                # headers["Authorization"] = f"Bearer {self.openai_api_key}"
+
+                data = {
+                    'key1': self.api_key,
+                    'key2': self.openai_api_key,
+                    'payload': payload,
+                }
+
+                resp = requests.post('https://www.mangatranslate.com/api/v1/manga/contenttranslate', data=data)
+
+                s = resp.json().get('content')
+                return s
+
                 i += 1
 
         # encoded_image = None
