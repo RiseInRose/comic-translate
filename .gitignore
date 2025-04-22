@@ -19,3 +19,4 @@ pyproject.toml
 uv.lock
 
 *.bin
+.idea
