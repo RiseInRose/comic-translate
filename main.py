@@ -27,7 +27,7 @@ class RenderSettings:
 
 @dataclass
 class Settings:
-    gpu_enabled: bool = False
+    gpu_enabled: bool = True
     lang_mapping: Dict[str, str] = None
     inpainter_key: str = 'LaMa'
     inpaint_config: Config = None
