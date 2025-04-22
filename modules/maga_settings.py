@@ -14,7 +14,7 @@ class ToolSettings:
     translator: str = 'GPT-4'
     ocr: str = 'Default'
     inpainter: str = 'LaMa'
-    use_gpu: bool = False
+    use_gpu: bool = True
     hd_strategy: HDStrategySettings = HDStrategySettings()
 
 class LLMSettings:
@@ -188,7 +188,7 @@ class PSettings:
         self.tools.translator = tools.get('translator', 'GPT-4')
         self.tools.ocr = tools.get('ocr', 'Default')
         self.tools.inpainter = tools.get('inpainter', 'LaMa')
-        self.tools.use_gpu = tools.get('use_gpu', False)
+        self.tools.use_gpu = tools.get('use_gpu', True)
         
         hd_strategy = tools.get('hd_strategy', {})
         self.tools.hd_strategy = HDStrategySettings(
