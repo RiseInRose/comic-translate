@@ -12,10 +12,10 @@ class EasyOCREngine(OCREngine):
         """Initialize EasyOCR engine."""
         self.reader = None
         self.language = ['en']
-        self.gpu_enabled = False
+        self.gpu_enabled = True
         self.expansion_percentage = 5
         
-    def initialize(self, languages: list[str] = None, use_gpu: bool = False, 
+    def initialize(self, languages: list[str] = None, use_gpu: bool = True,
                   expansion_percentage: int = 5, **kwargs) -> None:
         """
         Initialize the EasyOCR engine.
