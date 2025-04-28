@@ -60,8 +60,8 @@ class BaseLLMTranslation(LLMTranslation):
                 'payload': payload,
             }
             print(data)
-            # resp = requests.post('https://www.mangatranslate.com/api/v1/manga/googletranslate', data=data)
-            resp = requests.post('http://127.0.0.1:8002/api/v1/manga/googletranslate', data=data)
+            resp = requests.post('https://www.mangatranslate.com/api/v1/manga/googletranslate', data=data)
+            # resp = requests.post('http://127.0.0.1:8002/api/v1/manga/googletranslate', data=data)
             google_trans_result = resp.json()
             if google_trans_result.get('result') == 'success':
                 print('google_trans success')
