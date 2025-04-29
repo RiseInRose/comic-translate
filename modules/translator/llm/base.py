@@ -49,26 +49,9 @@ class BaseLLMTranslation(LLMTranslation):
             List of updated TextBlock objects with translations
         """
         try:
-
-            payload = json.dumps({
-                'src': language_codes.get(self.source_lang),
-                'dest': language_codes.get(self.target_lang),
-                'text_list': [blk.text for blk in blk_list]
-            })
-
-            data = {
-                'payload': payload,
-            }
-            print(data)
-            resp = requests.post('https://www.mangatranslate.com/api/v1/manga/googletranslate', data=data)
-            # resp = requests.post('http://127.0.0.1:8002/api/v1/manga/googletranslate', data=data)
-            google_trans_result = resp.json()
-            if google_trans_result.get('result') == 'success':
-                print('google_trans success')
-                content = google_trans_result.get('content')
-                for blk in blk_list:
-                    blk.translation = content.get(blk.text)
-            else:
+            vip = True
+            need_google_trans = True
+            if vip:
                 print('google_trans fail')
                 entire_raw_text = get_raw_text(blk_list)
                 system_prompt = self.get_system_prompt(self.source_lang, self.target_lang)
@@ -76,6 +59,57 @@ class BaseLLMTranslation(LLMTranslation):
 
                 entire_translated_text = self._perform_translation(user_prompt, system_prompt, image)
                 set_texts_from_json(blk_list, entire_translated_text)
+                for blk in blk_list:
+                    if blk.translation is not None and len(blk.translation) > 0:
+                        need_google_trans = False
+                        break
+
+            if need_google_trans:
+                payload = json.dumps({
+                    'src': language_codes.get(self.source_lang),
+                    'dest': language_codes.get(self.target_lang),
+                    'text_list': [blk.text for blk in blk_list]
+                })
+
+                data = {
+                    'payload': payload,
+                }
+                print(data)
+                resp = requests.post('https://www.mangatranslate.com/api/v1/manga/googletranslate', data=data)
+                # resp = requests.post('http://127.0.0.1:8002/api/v1/manga/googletranslate', data=data)
+                google_trans_result = resp.json()
+                if google_trans_result.get('result') == 'success':
+                    print('google_trans success')
+                    content = google_trans_result.get('content')
+                    for blk in blk_list:
+                        blk.translation = content.get(blk.text)
+
+            # payload = json.dumps({
+            #     'src': language_codes.get(self.source_lang),
+            #     'dest': language_codes.get(self.target_lang),
+            #     'text_list': [blk.text for blk in blk_list]
+            # })
+            #
+            # data = {
+            #     'payload': payload,
+            # }
+            # print(data)
+            # resp = requests.post('https://www.mangatranslate.com/api/v1/manga/googletranslate', data=data)
+            # # resp = requests.post('http://127.0.0.1:8002/api/v1/manga/googletranslate', data=data)
+            # google_trans_result = resp.json()
+            # if google_trans_result.get('result') == 'success':
+            #     print('google_trans success')
+            #     content = google_trans_result.get('content')
+            #     for blk in blk_list:
+            #         blk.translation = content.get(blk.text)
+            # else:
+            #     print('google_trans fail')
+            #     entire_raw_text = get_raw_text(blk_list)
+            #     system_prompt = self.get_system_prompt(self.source_lang, self.target_lang)
+            #     user_prompt = f"{extra_context}\nMake the translation sound as natural as possible.\nTranslate this:\n{entire_raw_text}"
+            #
+            #     entire_translated_text = self._perform_translation(user_prompt, system_prompt, image)
+            #     set_texts_from_json(blk_list, entire_translated_text)
         
         except Exception as e:
             print(f"{type(self).__name__} translation error: {str(e)}")
