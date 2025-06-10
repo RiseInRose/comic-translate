@@ -35,6 +35,10 @@ class BatchProcessor:
             file.write(image_path + "\n")
 
     def process_one_image(self, settings, image, source_lang, target_lang):
+        # 用日文代替繁体中文，会有更好的识别效果
+        if source_lang == 'Traditional Chinese':
+            source_lang = 'Japanese'
+
         target_lang_en = settings.lang_mapping.get(target_lang, target_lang)
         trg_lng_cd = get_language_code(target_lang_en)
         if self.block_detector_cache is None:
@@ -73,6 +77,7 @@ class BatchProcessor:
                 print(time.time() - cur_t)
                 print('------------------ocr.process------------------')
                 self.ocr.process(image, blk_list)
+                print('------------------ocr.process------------------')
                 source_lang_english = settings.lang_mapping.get(source_lang, source_lang)
                 rtl = True if source_lang_english == 'Japanese' else False
                 blk_list = sort_blk_list(blk_list, rtl)
@@ -185,6 +190,10 @@ class BatchProcessor:
 
             source_lang = image_states[image_path]['source_lang']
             print('source_lang', source_lang)
+            # 用日文代替繁体中文，会有更好的识别效果
+            if source_lang == 'Traditional Chinese':
+                source_lang = 'Japanese'
+                
             source_lang_en = settings.lang_mapping.get(source_lang, source_lang)
             print('source_lang_en', source_lang_en)
             source_lng_cd = get_language_code(source_lang_en)
