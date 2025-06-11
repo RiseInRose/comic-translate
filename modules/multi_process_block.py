@@ -88,7 +88,8 @@ def process_block(blk, render_settings, trg_lng_cd):
         render_settings.alignment,
         render_settings.direction,
         render_settings.max_font_size,
-        render_settings.min_font_size
+        render_settings.min_font_size,
+        break_long_words=trg_lng_cd in {'zh-CN', 'zh-TW', 'zh', 'ja'}
     )
 
     if any(lang in trg_lng_cd.lower() for lang in ['zh', 'ja', 'th']):
