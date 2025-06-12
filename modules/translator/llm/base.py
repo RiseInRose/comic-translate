@@ -1,4 +1,5 @@
 import json, requests
+import time
 from typing import Any
 import numpy as np
 from abc import abstractmethod
@@ -52,7 +53,8 @@ class BaseLLMTranslation(LLMTranslation):
             vip = True
             need_google_trans = True
             if vip:
-                print('google_trans fail')
+                print('vip trans')
+                t1 = time.time()
                 entire_raw_text = get_raw_text(blk_list)
                 system_prompt = self.get_system_prompt(self.source_lang, self.target_lang)
                 user_prompt = f"{extra_context}\nMake the translation sound as natural as possible.\nTranslate this:\n{entire_raw_text}"
@@ -64,7 +66,12 @@ class BaseLLMTranslation(LLMTranslation):
                         need_google_trans = False
                         break
 
+                print('-------vip trans time =%s' % (time.time() - t1))
+
             if need_google_trans:
+                print('need google trans')
+                t2 = time.time()
+
                 payload = json.dumps({
                     'src': language_codes.get(self.source_lang),
                     'dest': language_codes.get(self.target_lang),
@@ -83,6 +90,10 @@ class BaseLLMTranslation(LLMTranslation):
                     content = google_trans_result.get('content')
                     for blk in blk_list:
                         blk.translation = content.get(blk.text)
+                else:
+                    print('google trans fail')
+
+                print('-------google trans time =%s' % (time.time() - t2))
 
             # payload = json.dumps({
             #     'src': language_codes.get(self.source_lang),

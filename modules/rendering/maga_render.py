@@ -43,37 +43,54 @@ def pil_to_cv2(pil_image: Image):
 
 def pyside_word_wrap(text: str, font_pth: str, roi_width: int, roi_height: int,
                     line_spacing: int, outline_width: int, bold: bool, italic: bool, underline: bool,
-                    alignment: str, direction: str, init_font_size: int, min_font_size: int = 10) -> Tuple[str, int]:
+                    alignment: str, direction: str, init_font_size: int, min_font_size: int = 10, break_long_words=False) -> Tuple[str, int]:
     """Break long text to multiple lines, and reduce point size
     until all text fits within a bounding box."""
-    
+
     def prepare_font(font_size):
         font = ImageFont.truetype(font_pth, font_size)
         # PIL doesn't support font styles directly, would need to use specific font files
         return font
-    
+
     def eval_metrics(txt: str, font_sz: float) -> Tuple[float, float]:
         """Quick helper function to calculate width/height of text using PIL."""
         # Create a temporary image for text measurement
         temp_img = Image.new('RGB', (1, 1))
         draw = ImageDraw.Draw(temp_img)
         font = prepare_font(font_sz)
-        
+
         # Get text bounds
         left, top, right, bottom = draw.multiline_textbbox((0, 0), txt, font=font, align=alignment, spacing=line_spacing)
         width = right - left
         height = bottom - top
-        
+
         # Add outline width to the size
         if outline_width > 0:
             width += 2 * outline_width
             height += 2 * outline_width
-        
+
         return width, height
 
     mutable_message = text
     font_size = init_font_size
-    
+    block_area = roi_width * roi_height
+    width, height = eval_metrics(mutable_message, font_size)
+    word_area = width * height
+    area_ratio = word_area * 1.0 / block_area
+    if area_ratio > 1:
+        font_size = int(font_size / area_ratio)
+        if font_size < min_font_size:
+            font_size = min_font_size
+
+    mutable_message = '\n'.join(
+        hyphen_wrap(text, 1, break_on_hyphens=break_long_words, break_long_words=break_long_words, hyphenate_broken_words=True))
+    wrapped_width, _ = eval_metrics(mutable_message, font_size)
+    area_ratio = wrapped_width * 1.0 / roi_width
+    if area_ratio > 1:
+        font_size = int(font_size / area_ratio)
+        if font_size < min_font_size:
+            font_size = min_font_size
+
     while font_size > min_font_size:
         width, height = eval_metrics(mutable_message, font_size)
         if height > roi_height:
@@ -82,10 +99,13 @@ def pyside_word_wrap(text: str, font_pth: str, roi_width: int, roi_height: int,
         elif width > roi_width:
             columns = len(mutable_message)
             while columns > 0:
-                columns -= 1
+                if columns > 4:
+                    columns //= 2
+                else:
+                    columns -= 1
                 if columns == 0:
                     break
-                mutable_message = '\n'.join(hyphen_wrap(text, columns, break_on_hyphens=False, break_long_words=False, hyphenate_broken_words=True)) 
+                mutable_message = '\n'.join(hyphen_wrap(text, columns, break_on_hyphens=break_long_words, break_long_words=break_long_words, hyphenate_broken_words=True))
                 wrapped_width, _ = eval_metrics(mutable_message, font_size)
                 if wrapped_width <= roi_width:
                     break
@@ -104,7 +124,7 @@ def pyside_word_wrap(text: str, font_pth: str, roi_width: int, roi_height: int,
         min_cost = 1e9
         min_text = text
         for columns in range(1, len(text)):
-            wrapped_text = '\n'.join(hyphen_wrap(text, columns, break_on_hyphens=False, break_long_words=False, hyphenate_broken_words=True))
+            wrapped_text = '\n'.join(hyphen_wrap(text, columns, break_on_hyphens=break_long_words, break_long_words=break_long_words, hyphenate_broken_words=True))
             wrapped_width, wrapped_height = eval_metrics(wrapped_text, font_size)
             cost = (wrapped_width - roi_width)**2 + (wrapped_height - roi_height)**2
             if cost < min_cost:
