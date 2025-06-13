@@ -172,7 +172,7 @@ class BatchProcessor:
                        output_path: str = None,
                        archive_info: List[Dict[str, Any]] = None,
                        progress_callback: Callable[[int, int, int, int, bool, str], None] = None,
-                       cancel_check: Callable[[], bool] = None) -> None:
+                       cancel_check: Callable[[], bool] = None):
         """
         批量处理图片
 
@@ -191,6 +191,8 @@ class BatchProcessor:
         import time
         cur_t = time.time()
         print(time.time()-cur_t)
+
+        error_msg_arr = []
         for index, image_path in enumerate(image_files):
             if progress_callback:
                 progress_callback(index, total_images, 0, 10, True, "")
@@ -238,8 +240,9 @@ class BatchProcessor:
             image = cv2.imread(image_path)
             h, w, _ = image.shape
 
-            if h * w > 1200 * 1600 * 2:
+            if h * w > 2400 * 1800:
                 print('Image too large')
+                error_msg_arr.append(base_name + ' Image too large')
                 continue
 
             # Text Block Detection
@@ -269,7 +272,8 @@ class BatchProcessor:
             blk_list = self.block_detector_cache.detect(image)
 
             if len(blk_list) > 20:
-                print('Too much text in image')
+                print('Too much text in one image')
+                error_msg_arr.append(base_name + ' Too much text in one image')
                 continue
 
             print('------------------blk_list------------------')
@@ -303,6 +307,7 @@ class BatchProcessor:
                     if progress_callback:
                         progress_callback(index, total_images, 2, 10, False, f"OCR Error: {error_msg}")
                     self.log_skipped_image(directory, timestamp, image_path)
+                    error_msg_arr.append(base_name + f" OCR Error: {error_msg}")
                     continue
             else:
                 print('------------------skip_save------------------')
@@ -310,6 +315,7 @@ class BatchProcessor:
                 if progress_callback:
                     progress_callback(index, total_images, 2, 10, False, "No text blocks detected")
                 self.log_skipped_image(directory, timestamp, image_path)
+                error_msg_arr.append(base_name + " No text blocks detected")
                 continue
 
             if progress_callback:
@@ -339,7 +345,7 @@ class BatchProcessor:
                 path = os.path.join(directory, f"comic_translate_{timestamp}", "cleaned_images", archive_bname)
                 if not os.path.exists(path):
                     os.makedirs(path, exist_ok=True)
-                cv2.imwrite(os.path.join(path, f"{base_name}_cleaned{extension}"),
+                cv2.imwrite(os.path.join(path, f" {base_name}_cleaned{extension}"),
                            cv2.cvtColor(inpaint_input_img, cv2.COLOR_BGR2RGB))
 
             if progress_callback:
@@ -360,6 +366,7 @@ class BatchProcessor:
                 if progress_callback:
                     progress_callback(index, total_images, 5, 10, False, f"Translation Error: {error_msg}")
                 self.log_skipped_image(directory, timestamp, image_path)
+                error_msg_arr.append(base_name + f" Translation Error: {error_msg}")
                 continue
 
             print(time.time() - cur_t)
@@ -378,6 +385,7 @@ class BatchProcessor:
                     if progress_callback:
                         progress_callback(index, total_images, 5, 10, False, "Empty translation result")
                     self.log_skipped_image(directory, timestamp, image_path)
+                    error_msg_arr.append(base_name + " Empty translation result")
                     continue
             except json.JSONDecodeError as e:
                 error_msg = str(e)
@@ -385,6 +393,7 @@ class BatchProcessor:
                 if progress_callback:
                     progress_callback(index, total_images, 5, 10, False, f"Invalid translation format: {error_msg}")
                 self.log_skipped_image(directory, timestamp, image_path)
+                error_msg_arr.append(base_name + f" Invalid translation format: {error_msg}")
                 continue
 
             # Save text files if needed
@@ -443,6 +452,11 @@ class BatchProcessor:
             print(time.time() - cur_t)
             cur_t = time.time()
             print('-------------Save rendered image------------')
+
+        if len(error_msg_arr) > 0:
+            return False, '\r\n'.join(error_msg_arr)
+        else:
+            return True, ''
 
 if __name__ == '__main__':
     BatchProcessor().process_images()
