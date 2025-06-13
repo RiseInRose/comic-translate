@@ -172,7 +172,7 @@ class BatchProcessor:
                        output_path: str = None,
                        archive_info: List[Dict[str, Any]] = None,
                        progress_callback: Callable[[int, int, int, int, bool, str], None] = None,
-                       cancel_check: Callable[[], bool] = None) -> (bool, str):
+                       cancel_check: Callable[[], bool] = None):
         """
         批量处理图片
 
@@ -240,7 +240,7 @@ class BatchProcessor:
             image = cv2.imread(image_path)
             h, w, _ = image.shape
 
-            if h * w > 1200 * 1600 * 2:
+            if h * w > 2400 * 1800:
                 print('Image too large')
                 error_msg_arr.append(base_name + ' Image too large')
                 continue
