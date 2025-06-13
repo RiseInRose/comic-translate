@@ -48,7 +48,7 @@ class CustomTranslation(BaseLLMTranslation):
         """
 
         payload = json.dumps(
-            {"model": "gpt-3.5-turbo", "messages": [
+            {"model": "gpt-4o-mini", "messages": [
                 {"role": "system", "content": [{"type": "text", "text": system_prompt}]},
                 {"role": "user", "content": [{"type": "text", "text": user_prompt}]}
             ]}
