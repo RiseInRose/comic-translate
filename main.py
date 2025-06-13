@@ -1,4 +1,4 @@
-import sys
+import sys, time
 import os
 import cv2
 from modules.batch_processor import BatchProcessor
@@ -86,7 +86,7 @@ class Settings:
         self.settings_page.tools.translator = 'Custom'
         self.settings_page.credentials.credentials['Custom_api_key'] = 'sk-eb7bza776ztE5ieH3e0aA56c7aB24bA38dFf734cB50f4d69'#'sk-jrKOlAUbyydnF6ve4e751a56Cb564eAd90A100671942Ae7c'#'sk-6rPJZBY5dUqPvwEaCf4353CaC9Ae465091Ac2a79510187Dc'
         self.settings_page.credentials.credentials['Custom_api_url'] = 'https://api.mixrai.com/v1'
-        self.settings_page.credentials.credentials['Custom_model'] = 'gpt-3.5-turbo'
+        self.settings_page.credentials.credentials['Custom_model'] = 'gpt-4o-mini'
         self.settings_page.credentials.credentials['Custom_openai_api_key'] = os.getenv('comic_open_api_key')
         self.settings_page.credentials.credentials['Custom_openai_api_url'] = 'https://api.openai.com/v1'
         self.settings_page.credentials.credentials['Open AI GPT_api_key'] = os.getenv('comic_open_api_key')
@@ -151,6 +151,7 @@ def run(input_path, output_path, target_language, source_language='Japanese'):
         }
 
     print('image_states', image_states)
+    t1 = time.time()
     # 初始化处理器并处理图片
     processor = BatchProcessor()
     processor.process_images(
@@ -159,6 +160,7 @@ def run(input_path, output_path, target_language, source_language='Japanese'):
         settings=settings,
         output_path=output_path
     )
+    print('----full process time----%s' % (time.time() - t1))
 
 if __name__ == '__main__':
     # main()
@@ -169,15 +171,19 @@ if __name__ == '__main__':
     image_path = sys.argv[1]
     input_image = cv2.imread(image_path)
 
+    # source_language = 'Traditional Chinese'
     source_language = 'Russian'
-    target_language = 'Simplified Chinese'  # 'Korean' # 'Simplified Chinese' # 'Chinese' # 'English' #'Traditional Chinese' #
+    target_language = 'Traditional Chinese'  # 'Russian' # 'Korean' # 'Simplified Chinese' # 'Chinese' # 'English' #'Traditional Chinese' # 'Japanese'
     settings = Settings(source_language, target_language)
     processor = BatchProcessor()
     # flag, output_image = processor.process_one_image(settings, input_image, 'Japanese', target_language)
+    t1 = time.time()
     flag, output_image = processor.process_one_image(settings, input_image, source_language, target_language)
 
     if flag:
         cv2.imwrite('output.png', output_image)
+
+    print('------full-time------%s' % (time.time() - t1))
 
 
 
