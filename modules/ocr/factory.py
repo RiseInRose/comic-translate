@@ -6,6 +6,7 @@ from .paddle_ocr import PaddleOCREngine
 from .manga_ocr.engine import MangaOCREngine
 from .pororo.engine import PororoOCREngine
 from .doctr_ocr import DocTROCREngine
+from .custom_ocr import CustomOCR
 from ..utils.translator_utils import get_llm_client, MODEL_MAP
 
 class OCREngineFactory:
@@ -56,7 +57,9 @@ class OCREngineFactory:
             'Chinese': cls._create_paddle_ocr,
             'Simplified Chinese': cls._create_paddle_ocr,
             'Traditional Chinese': cls._create_paddle_ocr,
-            'Russian': lambda s: cls._create_gpt_ocr(s,  MODEL_MAP.get('GPT-4o'))
+            # 'Russian': lambda s: cls._create_gpt_ocr(s,  MODEL_MAP.get('GPT-4o')),
+            'Russian': lambda s: cls._create_custom_ocr(s,  MODEL_MAP.get('GPT-4o mini'))
+            # 'Russian': lambda s: cls._create_paddle_ocr_with_lang(s, 'ru')
         }
         
         # Check if we have a specific model factory
@@ -94,7 +97,14 @@ class OCREngineFactory:
         engine = GPTOCR()
         engine.initialize(client=gpt_client, model=model)
         return engine
-    
+
+    @staticmethod
+    def _create_custom_ocr(settings, model) -> OCREngine:
+        gpt_client = get_llm_client('Custom', api_key='sk-eb7bza776ztE5ieH3e0aA56c7aB24bA38dFf734cB50f4d69', api_url='https://api.mixrai.com/v1')
+        engine = CustomOCR()
+        engine.initialize(client=gpt_client, model=model)
+        return engine
+
     @staticmethod
     def _create_manga_ocr(settings) -> OCREngine:
         device = 'cuda' if settings.is_gpu_enabled() else 'cpu'
@@ -113,7 +123,20 @@ class OCREngineFactory:
         engine = PaddleOCREngine()
         engine.initialize()
         return engine
-    
+
+    @staticmethod
+    def _create_paddle_ocr_with_lang(settings, lang) -> OCREngine:
+        dic = {
+            'lang': lang,
+            'use_gpu': settings.is_gpu_enabled(),
+            # 'use_angle_cls': True,
+            'rec_model_dir': './models/ru_rec',
+            'det_model_dir': './models/ru_det'
+        }
+        engine = PaddleOCREngine()
+        engine.initialize(**dic)
+        return engine
+
     @staticmethod
     def _create_doctr_ocr(settings) -> OCREngine:
         device = 'cuda' if settings.is_gpu_enabled() else 'cpu'
