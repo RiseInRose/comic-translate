@@ -154,7 +154,7 @@ def run(input_path, output_path, target_language, source_language='Japanese'):
     t1 = time.time()
     # 初始化处理器并处理图片
     processor = BatchProcessor()
-    processor.process_images(
+    return processor.process_images(
         image_files=image_files,
         image_states=image_states,
         settings=settings,
