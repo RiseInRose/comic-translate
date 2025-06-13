@@ -35,6 +35,10 @@ class BatchProcessor:
             file.write(image_path + "\n")
 
     def process_one_image(self, settings, image, source_lang, target_lang):
+        h, w, _ = image.shape
+        if h * w > 1200 * 1600 * 2:
+            print('Image too large')
+            return False, 'Too much text in image'
         # 用日文代替繁体中文，会有更好的识别效果
         if source_lang == 'Traditional Chinese':
             source_lang = 'Japanese'
@@ -51,6 +55,9 @@ class BatchProcessor:
             )
 
         blk_list = self.block_detector_cache.detect(image)
+        if len(blk_list) > 20:
+            return False, 'Too much text in image'
+
         import time
         cur_t = time.time()
         print(time.time() - cur_t)
@@ -88,6 +95,8 @@ class BatchProcessor:
             print('------------------skip_save------------------')
             return False, 'skip_save'
 
+        for blk in blk_list:
+            print(blk.text)
         # Inpainting
         if self.inpainter_cache is None or self.cached_inpainter_key != settings.inpainter_key:
             device = 'cuda' if settings.gpu_enabled else 'cpu'
@@ -193,7 +202,7 @@ class BatchProcessor:
             # 用日文代替繁体中文，会有更好的识别效果
             if source_lang == 'Traditional Chinese':
                 source_lang = 'Japanese'
-                
+
             source_lang_en = settings.lang_mapping.get(source_lang, source_lang)
             print('source_lang_en', source_lang_en)
             source_lng_cd = get_language_code(source_lang_en)
@@ -227,6 +236,11 @@ class BatchProcessor:
                         break
 
             image = cv2.imread(image_path)
+            h, w, _ = image.shape
+
+            if h * w > 1200 * 1600 * 2:
+                print('Image too large')
+                continue
 
             # Text Block Detection
             if progress_callback:
@@ -253,6 +267,11 @@ class BatchProcessor:
                 )
 
             blk_list = self.block_detector_cache.detect(image)
+
+            if len(blk_list) > 20:
+                print('Too much text in image')
+                continue
+
             print('------------------blk_list------------------')
             print(time.time()-cur_t)
             cur_t = time.time()
