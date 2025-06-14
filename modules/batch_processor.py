@@ -43,12 +43,16 @@ class BatchProcessor:
         if source_lang == 'Traditional Chinese':
             source_lang = 'Japanese'
 
-        if w > 1500:
-            settings.render_settings.max_font_size = int(40 * w / 1500)
-            settings.render_settings.min_font_size = int(16 * w / 1500)
-        else:
-            settings.render_settings.max_font_size = 40
-            settings.render_settings.min_font_size = 16
+        if h * w > 2400 * 1600:
+            percent = 1600.0 / w
+            image = cv2.resize(image, (int(w * percent), int(h * percent)))
+
+        # if w > 1500:
+        #     settings.render_settings.max_font_size = int(40 * w / 1500)
+        #     settings.render_settings.min_font_size = int(16 * w / 1500)
+        # else:
+        #     settings.render_settings.max_font_size = 40
+        #     settings.render_settings.min_font_size = 16
 
         target_lang_en = settings.lang_mapping.get(target_lang, target_lang)
         trg_lng_cd = get_language_code(target_lang_en)
@@ -256,12 +260,16 @@ class BatchProcessor:
                 error_msg_arr.append(base_name + ' Image too large')
                 continue
 
-            if w > 1500:
-                settings.render_settings.max_font_size = int(40 * w / 1500)
-                settings.render_settings.min_font_size = int(16 * w / 1500)
-            else:
-                settings.render_settings.max_font_size = 40
-                settings.render_settings.min_font_size = 16
+            if h * w > 2400 * 1600:
+                percent = 1600.0 / w
+                image = cv2.resize(image, (int(w*percent), int(h*percent)))
+
+            # if w > 1500:
+            #     settings.render_settings.max_font_size = int(40 * w / 1500)
+            #     settings.render_settings.min_font_size = int(16 * w / 1500)
+            # else:
+            #     settings.render_settings.max_font_size = 40
+            #     settings.render_settings.min_font_size = 16
 
             # Text Block Detection
             if progress_callback:
