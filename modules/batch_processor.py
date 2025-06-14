@@ -36,7 +36,7 @@ class BatchProcessor:
 
     def process_one_image(self, settings, image, source_lang, target_lang):
         h, w, _ = image.shape
-        if h * w > 1200 * 1600 * 2:
+        if h * w > 2400 * 3600:
             print('Image too large')
             return False, 'Too much text in image'
         # 用日文代替繁体中文，会有更好的识别效果
@@ -55,7 +55,7 @@ class BatchProcessor:
             )
 
         blk_list = self.block_detector_cache.detect(image)
-        if len(blk_list) > 20:
+        if len(blk_list) > 30:
             return False, 'Too much text in image'
 
         import time
@@ -172,7 +172,7 @@ class BatchProcessor:
                        output_path: str = None,
                        archive_info: List[Dict[str, Any]] = None,
                        progress_callback: Callable[[int, int, int, int, bool, str], None] = None,
-                       cancel_check: Callable[[], bool] = None):
+                       cancel_check: Callable[[], bool] = None,logger=None):
         """
         批量处理图片
 
@@ -240,7 +240,11 @@ class BatchProcessor:
             image = cv2.imread(image_path)
             h, w, _ = image.shape
 
-            if h * w > 2400 * 1800:
+            if h * w > 3200 * 2400:
+                if logger is not None:
+                    logger.error(f"翻译超大图片，尺寸: {h}*{w}")
+
+            if h > 10000 or w > 10000:
                 print('Image too large')
                 error_msg_arr.append(base_name + ' Image too large')
                 continue
@@ -271,7 +275,11 @@ class BatchProcessor:
 
             blk_list = self.block_detector_cache.detect(image)
 
-            if len(blk_list) > 20:
+            if len(blk_list) > 30:
+                if logger is not None:
+                    logger.error(f"翻译多文字快图片，文字块数量: {len(blk_list)}")
+
+            if len(blk_list) > 300:
                 print('Too much text in one image')
                 error_msg_arr.append(base_name + ' Too much text in one image')
                 continue

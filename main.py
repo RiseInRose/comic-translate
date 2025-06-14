@@ -130,7 +130,7 @@ def main():
     )
 
 
-def run(input_path, output_path, target_language, source_language='Japanese'):
+def run(input_path, output_path, target_language, source_language='Japanese', logger=None):
     image_files = []
 
     names = os.listdir(input_path)
@@ -158,7 +158,8 @@ def run(input_path, output_path, target_language, source_language='Japanese'):
         image_files=image_files,
         image_states=image_states,
         settings=settings,
-        output_path=output_path
+        output_path=output_path,
+        logger=logger
     )
     print('----full process time----%s' % (time.time() - t1))
     return flag, msg
@@ -173,7 +174,7 @@ if __name__ == '__main__':
     input_image = cv2.imread(image_path)
 
     # source_language = 'Traditional Chinese'
-    source_language = 'Russian'
+    source_language = 'Japanese'
     target_language = 'Traditional Chinese'  # 'Russian' # 'Korean' # 'Simplified Chinese' # 'Chinese' # 'English' #'Traditional Chinese' # 'Japanese'
     settings = Settings(source_language, target_language)
     processor = BatchProcessor()
