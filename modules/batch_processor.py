@@ -256,9 +256,9 @@ class BatchProcessor:
                 error_msg_arr.append(base_name + ' Image too large')
                 continue
 
-            if w > 1200:
-                settings.render_settings.max_font_size = int(40 * w / 1200)
-                settings.render_settings.min_font_size = int(16 * w / 1200)
+            if w > 1500:
+                settings.render_settings.max_font_size = int(40 * w / 1500)
+                settings.render_settings.min_font_size = int(16 * w / 1500)
             else:
                 settings.render_settings.max_font_size = 40
                 settings.render_settings.min_font_size = 16
