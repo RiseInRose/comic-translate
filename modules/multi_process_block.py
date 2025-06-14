@@ -75,7 +75,9 @@ def process_block(blk, render_settings, trg_lng_cd):
     translation = blk.translation
     if not translation or len(translation) == 1:
         return None
-    width *= 1.2
+
+    if trg_lng_cd in {'zh-CN', 'zh-TW', 'zh', 'ja'}:
+        width *= 1.2
 
     translation, font_size = pyside_word_wrap(
         translation,
