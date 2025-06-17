@@ -43,7 +43,7 @@ def pil_to_cv2(pil_image: Image):
 
 def pyside_word_wrap(text: str, font_pth: str, roi_width: int, roi_height: int,
                     line_spacing: int, outline_width: int, bold: bool, italic: bool, underline: bool,
-                    alignment: str, direction: str, init_font_size: int, min_font_size: int = 10, break_long_words=False) -> Tuple[str, int]:
+                    alignment: str, direction: str, init_font_size: int, min_font_size: int = 10, break_long_words=False) -> Tuple[str, int, float, float]:
     """Break long text to multiple lines, and reduce point size
     until all text fits within a bounding box."""
 
@@ -133,7 +133,8 @@ def pyside_word_wrap(text: str, font_pth: str, roi_width: int, roi_height: int,
 
         mutable_message = min_text
 
-    return mutable_message, font_size
+    width, height = eval_metrics(mutable_message, font_size)
+    return mutable_message, font_size, width, height
 
 def draw_text(image: np.ndarray, blk_list: List[TextBlock], font_pth: str, colour: str = "#000", init_font_size: int = 40, min_font_size=10, outline: bool = True):
     image = cv2_to_pil(image)

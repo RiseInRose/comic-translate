@@ -69,6 +69,13 @@ class OutlineInfo:
     width: float
     type: OutlineType
 
+    def __init__(self, start, end, color, width, type):
+        self.start = start
+        self.end = end
+        self.color = color
+        self.width = width
+        self.type = type
+
 def process_block(blk, render_settings, trg_lng_cd):
     """处理单个文本块的线程函数"""
     x1, y1, width, height = blk.xywh
@@ -79,7 +86,7 @@ def process_block(blk, render_settings, trg_lng_cd):
     if trg_lng_cd in {'zh-CN', 'zh-TW', 'zh', 'ja'}:
         width *= 1.2
 
-    translation, font_size = pyside_word_wrap(
+    translation, font_size, msg_width, msg_height = pyside_word_wrap(
         translation,
         render_settings.font_family,
         width, height,
@@ -97,6 +104,8 @@ def process_block(blk, render_settings, trg_lng_cd):
 
     if any(lang in trg_lng_cd.lower() for lang in ['zh', 'ja', 'th']):
         translation = translation.replace(' ', '')
+
+    y1 += (height - msg_height) * 0.3
 
     return {
         'text': translation,

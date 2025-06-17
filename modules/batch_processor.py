@@ -34,11 +34,38 @@ class BatchProcessor:
         with open(os.path.join(directory, f"comic_translate_{timestamp}", "skipped_images.txt"), 'a', encoding='UTF-8') as file:
             file.write(image_path + "\n")
 
+    def get_min_and_max_font_size(self, w):
+        max_font_size = int(32 * (w / 960.0) ** 0.5)
+        min_font_size = int(16 * (w / 960.0) ** 0.5)
+
+        if w >= 1600:
+            if max_font_size > 44:
+                max_font_size = 44
+            if min_font_size > 20:
+                min_font_size = 20
+        elif w >= 1280:
+            if max_font_size > 40:
+                max_font_size = 40
+            if min_font_size > 18:
+                min_font_size = 18
+        elif w >= 720:
+            if max_font_size < 32:
+                max_font_size = 32
+            if min_font_size < 14:
+                min_font_size = 14
+        else:
+            if max_font_size < 28:
+                max_font_size = 28
+            if min_font_size < 12:
+                min_font_size = 12
+
+        return min_font_size, max_font_size
+
     def process_one_image(self, settings, image, source_lang, target_lang):
         h, w, _ = image.shape
         if h * w > 2400 * 3600:
             print('Image too large')
-            return False, 'Too much text in image'
+            return False, 'Image too large'
         # 用日文代替繁体中文，会有更好的识别效果
         if source_lang == 'Traditional Chinese':
             source_lang = 'Japanese'
@@ -46,6 +73,11 @@ class BatchProcessor:
         if h * w > 2400 * 1600:
             percent = 1600.0 / w
             image = cv2.resize(image, (int(w * percent), int(h * percent)))
+
+        min_font_size, max_font_size = self.get_min_and_max_font_size(w)
+
+        settings.render_settings.max_font_size = max_font_size
+        settings.render_settings.min_font_size = min_font_size
 
         # if w > 1500:
         #     settings.render_settings.max_font_size = int(40 * w / 1500)
@@ -94,8 +126,16 @@ class BatchProcessor:
                 cur_t = time.time()
                 print(time.time() - cur_t)
                 print('------------------ocr.process------------------')
-                self.ocr.process(image, blk_list)
+                import pickle
+                if os.path.exists('blk.pkl'):
+                    with open('blk.pkl', 'rb') as fr:
+                        blk_list = pickle.load(fr)
+                else:
+                    self.ocr.process(image, blk_list)
+                    with open('blk.pkl', 'wb') as fw:
+                        pickle.dump(blk_list, fw)
                 print('------------------ocr.process------------------')
+                print(time.time()-cur_t)
                 source_lang_english = settings.lang_mapping.get(source_lang, source_lang)
                 rtl = True if source_lang_english == 'Japanese' else False
                 blk_list = sort_blk_list(blk_list, rtl)
@@ -108,6 +148,8 @@ class BatchProcessor:
 
         for blk in blk_list:
             print(blk.text)
+
+        cur_t = time.time()
         # Inpainting
         if self.inpainter_cache is None or self.cached_inpainter_key != settings.inpainter_key:
             device = 'cuda' if settings.gpu_enabled else 'cpu'
@@ -116,9 +158,23 @@ class BatchProcessor:
             self.inpainter_cache = InpainterClass(device)
             self.cached_inpainter_key = inpainter_key
 
+        print('Inpainting')
+        print(time.time() - cur_t)
+        cur_t = time.time()
+
         mask = generate_mask(image, blk_list)
+        print('generate_mask')
+        print(time.time() - cur_t)
+        cur_t = time.time()
+
         inpaint_input_img = self.inpainter_cache(image, mask, settings.inpaint_config)
+        print('inpainter_cache')
+        print(time.time() - cur_t)
+        cur_t = time.time()
         inpaint_input_img = cv2.convertScaleAbs(inpaint_input_img)
+        print('convertScaleAbs')
+        print(time.time() - cur_t)
+        cur_t = time.time()
 
         print(time.time() - cur_t)
         cur_t = time.time()
@@ -152,7 +208,13 @@ class BatchProcessor:
         # Text Rendering
         render_settings = settings.render_settings
         format_translations(blk_list, trg_lng_cd, upper_case=render_settings.upper_case)
-        get_best_render_area(blk_list, image, inpaint_input_img)
+
+        with open('blk.pkl', 'wb') as fw:
+            pickle.dump(blk_list, fw)
+        with open('inpaint_input_img.pkl', 'wb') as fw:
+            pickle.dump(inpaint_input_img, fw)
+
+        # get_best_render_area(blk_list, image, inpaint_input_img)
 
         print(time.time() - cur_t)
         cur_t = time.time()
@@ -264,12 +326,10 @@ class BatchProcessor:
                 percent = 1600.0 / w
                 image = cv2.resize(image, (int(w*percent), int(h*percent)))
 
-            # if w > 1500:
-            #     settings.render_settings.max_font_size = int(40 * w / 1500)
-            #     settings.render_settings.min_font_size = int(16 * w / 1500)
-            # else:
-            #     settings.render_settings.max_font_size = 40
-            #     settings.render_settings.min_font_size = 16
+            min_font_size, max_font_size = self.get_min_and_max_font_size(w)
+
+            settings.render_settings.max_font_size = max_font_size
+            settings.render_settings.min_font_size = min_font_size
 
             # Text Block Detection
             if progress_callback:
@@ -331,6 +391,8 @@ class BatchProcessor:
                     source_lang_english = settings.lang_mapping.get(source_lang, source_lang)
                     rtl = True if source_lang_english == 'Japanese' else False
                     blk_list = sort_blk_list(blk_list, rtl)
+                    print(time.time()-cur_t)
+                    cur_t = time.time()
                 except Exception as e:
                     error_msg = str(e)
                     self.skip_save(directory, timestamp, base_name, extension, archive_bname, image)
@@ -361,9 +423,20 @@ class BatchProcessor:
                 self.inpainter_cache = InpainterClass(device)
                 self.cached_inpainter_key = inpainter_key
 
+            print('inpainter_cache---%s'%(time.time()-cur_t))
+            cur_t = time.time()
+
             mask = generate_mask(image, blk_list)
+            print('generate_mask---%s'%(time.time()-cur_t))
+            cur_t = time.time()
+
             inpaint_input_img = self.inpainter_cache(image, mask, settings.inpaint_config)
+            print('inpainter_cache---%s'%(time.time()-cur_t))
+            cur_t = time.time()
+
             inpaint_input_img = cv2.convertScaleAbs(inpaint_input_img)
+            print('convertScaleAbs---%s'%(time.time()-cur_t))
+            cur_t = time.time()
 
             if progress_callback:
                 progress_callback(index, total_images, 4, 10, False, "")
@@ -487,6 +560,62 @@ class BatchProcessor:
             return False, '\r\n'.join(error_msg_arr)
         else:
             return True, ''
+
+    def run_render(self, settings, image, source_lang, target_lang):
+        import pickle
+
+        # target_lang_en = settings.lang_mapping.get(target_lang, target_lang)
+        # trg_lng_cd = get_language_code(target_lang_en)
+        # if self.block_detector_cache is None:
+        #     device = 0 if settings.gpu_enabled else 'cpu'
+        #     self.block_detector_cache = TextBlockDetector(
+        #         'models/detection/comic-speech-bubble-detector.pt',
+        #         'models/detection/comic-text-segmenter.pt',
+        #         'models/detection/manga-text-detector.pt',
+        #         device
+        #     )
+        #
+        # blk_list = self.block_detector_cache.detect(image)
+        # for blk in blk_list:
+        #     print(blk.xyxy)
+        #
+        # with open('blk.pkl', 'wb') as fw:
+        #     pickle.dump(blk_list, fw)
+        #
+        # mask = generate_mask(image, blk_list)
+        # InpainterClass = inpaint_map[settings.inpainter_key]
+        # self.inpainter_cache = InpainterClass('cpu')
+        # self.cached_inpainter_key = settings.inpainter_key
+        # inpaint_input_img = self.inpainter_cache(image, mask, settings.inpaint_config)
+        # inpaint_input_img = cv2.convertScaleAbs(inpaint_input_img)
+        #
+        # im = cv2.cvtColor(inpaint_input_img, cv2.COLOR_RGB2BGR)
+        # with open('im.pkl', 'wb') as f:
+        #     pickle.dump(im, f)
+
+
+        with open('inpaint_input_img.pkl', 'rb') as fr:
+            inpaint_input_img = pickle.load(fr)
+
+        with open('blk.pkl', 'rb') as fr:
+            blk_list = pickle.load(fr)
+
+        with open('im.pkl', 'rb') as fr:
+            im = pickle.load(fr)
+
+        # get_best_render_area(blk_list, image, inpaint_input_img)
+
+        for blk in blk_list:
+            x1, y1, x2, y2 = blk.xyxy
+            xy1 = (x1, y1)
+            xy2 = (x2, y2)
+            cv2.rectangle(im, xy1, xy2, (0,0,255), thickness=4, lineType=None, shift=None)
+
+            # cv2.putText(im, "test", (x1, y1 + 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 1)
+
+        return True, im
+
+
 
 if __name__ == '__main__':
     BatchProcessor().process_images()
