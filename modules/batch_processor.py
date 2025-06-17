@@ -525,7 +525,7 @@ class BatchProcessor:
             # Text Rendering
             render_settings = settings.render_settings
             format_translations(blk_list, trg_lng_cd, upper_case=render_settings.upper_case)
-            get_best_render_area(blk_list, image, inpaint_input_img)
+            # get_best_render_area(blk_list, image, inpaint_input_img)
 
             print(time.time() - cur_t)
             cur_t = time.time()
