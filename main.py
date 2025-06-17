@@ -11,11 +11,11 @@ from modules.maga_settings import PSettings
 @dataclass
 class RenderSettings:
     font_family: str = 'Verdana'  # '/Users/mac/ocode/RiseInRose/comic-translate/fonts/文津宋体 第0平面_mianfeiziti.com.ttf' #
-    color: str = '#333'
+    color: str = '#111'
     line_spacing: float = 1.0
-    outline: bool = False
-    outline_color: str = '#333'
-    outline_width: float = 0.5
+    outline: bool = True
+    outline_color: str = '#fff'
+    outline_width: float = 1.0
     bold: bool = False
     italic: bool = False
     underline: bool = False
@@ -29,7 +29,7 @@ class RenderSettings:
 class Settings:
     gpu_enabled: bool = True
     lang_mapping: Dict[str, str] = None
-    inpainter_key: str = 'LaMa'
+    inpainter_key: str = 'LaMa'  # LaMa、MI-GAN 、AOT
     inpaint_config: Config = None
     export_inpainted_image: bool = False
     export_raw_text: bool = False
@@ -175,11 +175,12 @@ if __name__ == '__main__':
 
     # source_language = 'Traditional Chinese'
     source_language = 'Japanese'
-    target_language = 'Traditional Chinese'  # 'Russian' # 'Korean' # 'Simplified Chinese' # 'Chinese' # 'English' #'Traditional Chinese' # 'Japanese'
+    target_language = 'Chinese'  # 'Russian' # 'Korean' # 'Simplified Chinese' # 'Chinese' # 'English' #'Traditional Chinese' # 'Japanese'
     settings = Settings(source_language, target_language)
     processor = BatchProcessor()
     # flag, output_image = processor.process_one_image(settings, input_image, 'Japanese', target_language)
     t1 = time.time()
+    # flag, output_image = processor.run_render(settings, input_image, source_language, target_language)
     flag, output_image = processor.process_one_image(settings, input_image, source_language, target_language)
 
     if flag:

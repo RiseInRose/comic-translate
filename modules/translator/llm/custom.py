@@ -77,17 +77,19 @@ class CustomTranslation(BaseLLMTranslation):
                 # # 直连openai备用key
                 # api_url = self.openai_api_url
                 # headers["Authorization"] = f"Bearer {self.openai_api_key}"
+                try:
+                    data = {
+                        'key1': self.api_key,
+                        'key2': self.openai_api_key,
+                        'payload': payload,
+                    }
 
-                data = {
-                    'key1': self.api_key,
-                    'key2': self.openai_api_key,
-                    'payload': payload,
-                }
+                    resp = requests.post('https://www.mangatranslate.com/api/v1/manga/contenttranslate', data=data)
 
-                resp = requests.post('https://www.mangatranslate.com/api/v1/manga/contenttranslate', data=data)
-
-                s = resp.json().get('content')
-                return s
+                    s = resp.json().get('content')
+                    return s
+                except Exception as ex:
+                    print('-----------call server trans fail-----%s' % str(ex))
 
                 i += 1
 
