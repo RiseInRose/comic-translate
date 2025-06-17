@@ -53,11 +53,16 @@ class BatchProcessor:
                 max_font_size = 32
             if min_font_size < 14:
                 min_font_size = 14
-        else:
-            if max_font_size < 28:
-                max_font_size = 28
+        elif w >= 600:
+            if max_font_size < 24:
+                max_font_size = 24
             if min_font_size < 12:
                 min_font_size = 12
+        else:
+            if max_font_size < 18:
+                max_font_size = 18
+            if min_font_size < 10:
+                min_font_size = 10
 
         return min_font_size, max_font_size
 
@@ -127,13 +132,14 @@ class BatchProcessor:
                 print(time.time() - cur_t)
                 print('------------------ocr.process------------------')
                 import pickle
-                if os.path.exists('blk.pkl'):
-                    with open('blk.pkl', 'rb') as fr:
-                        blk_list = pickle.load(fr)
-                else:
-                    self.ocr.process(image, blk_list)
-                    with open('blk.pkl', 'wb') as fw:
-                        pickle.dump(blk_list, fw)
+                # if os.path.exists('blk.pkl'):
+                #     with open('blk.pkl', 'rb') as fr:
+                #         blk_list = pickle.load(fr)
+                # else:
+                #     self.ocr.process(image, blk_list)
+                #     with open('blk.pkl', 'wb') as fw:
+                #         pickle.dump(blk_list, fw)
+                self.ocr.process(image, blk_list)
                 print('------------------ocr.process------------------')
                 print(time.time()-cur_t)
                 source_lang_english = settings.lang_mapping.get(source_lang, source_lang)
