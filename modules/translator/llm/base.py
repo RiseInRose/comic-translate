@@ -37,7 +37,7 @@ class BaseLLMTranslation(LLMTranslation):
         self.target_lang = target_lang
         self.img_as_llm_input = settings.get_llm_settings()['image_input_enabled']
         
-    def translate(self, blk_list: list[TextBlock], image: np.ndarray, extra_context: str, logger=None) -> list[TextBlock]:
+    def translate(self, blk_list: list[TextBlock], image: np.ndarray, extra_context: str) -> list[TextBlock]:
         """
         Translate text blocks using LLM.
         
@@ -50,6 +50,7 @@ class BaseLLMTranslation(LLMTranslation):
             List of updated TextBlock objects with translations
         """
 
+        logger = None
         self.logger = logger
         try:
             vip = True

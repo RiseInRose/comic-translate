@@ -471,7 +471,7 @@ class BatchProcessor:
             # Translation
             translator = Translator(settings, source_lang, target_lang)
             try:
-                translator.translate(blk_list, image, settings.settings_page.llm.extra_context, logger=logger)
+                translator.translate(blk_list, image, settings.settings_page.llm.extra_context)
             except Exception as e:
                 error_msg = str(e)
                 self.skip_save(directory, timestamp, base_name, extension, archive_bname, image)
