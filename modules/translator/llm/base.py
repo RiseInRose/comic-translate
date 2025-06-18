@@ -22,6 +22,7 @@ class BaseLLMTranslation(LLMTranslation):
         self.client = None
         self.model = None
         self.img_as_llm_input = False
+        self.logger = None
     
     def initialize(self, settings: Any, source_lang: str, target_lang: str, **kwargs) -> None:
         """
@@ -36,6 +37,7 @@ class BaseLLMTranslation(LLMTranslation):
         self.source_lang = source_lang
         self.target_lang = target_lang
         self.img_as_llm_input = settings.get_llm_settings()['image_input_enabled']
+        self.logger = kwargs.get('logger')
         
     def translate(self, blk_list: list[TextBlock], image: np.ndarray, extra_context: str) -> list[TextBlock]:
         """
@@ -50,8 +52,6 @@ class BaseLLMTranslation(LLMTranslation):
             List of updated TextBlock objects with translations
         """
 
-        logger = None
-        self.logger = logger
         try:
             vip = True
             need_google_trans = True
@@ -70,8 +70,8 @@ class BaseLLMTranslation(LLMTranslation):
                             need_google_trans = False
                             break
                 except Exception as ex:
-                    if logger is not None:
-                        logger.error(f"{type(self).__name__} vip trans set texts error: {str(ex)}")
+                    if self.logger is not None:
+                        self.logger.error(f"{type(self).__name__} vip trans set texts error: {str(ex)}")
                     print(f"{type(self).__name__} vip trans set texts error: {str(ex)}")
 
                 print('-------vip trans time =%s' % (time.time() - t1))
@@ -100,8 +100,8 @@ class BaseLLMTranslation(LLMTranslation):
                         blk.translation = content.get(blk.text)
                 else:
                     print('google trans fail')
-                    if logger is not None:
-                        logger.error("google trans fail")
+                    if self.logger is not None:
+                        self.logger.error("google trans fail")
 
                 print('-------google trans time =%s' % (time.time() - t2))
 
@@ -133,8 +133,8 @@ class BaseLLMTranslation(LLMTranslation):
             #     set_texts_from_json(blk_list, entire_translated_text)
         
         except Exception as e:
-            if logger is not None:
-                logger.error(f"{type(self).__name__} translation error: {str(ex)}")
+            if self.logger is not None:
+                self.logger.error(f"{type(self).__name__} translation error: {str(ex)}")
             print(f"{type(self).__name__} translation error: {str(e)}")
             
         return blk_list

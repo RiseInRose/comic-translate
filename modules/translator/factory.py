@@ -37,7 +37,7 @@ class TranslationEngineFactory:
     DEFAULT_LLM_ENGINE = GPTTranslation
     
     @classmethod
-    def create_engine(cls, settings, source_lang: str, target_lang: str, translator_key: str) -> TranslationEngine:
+    def create_engine(cls, settings, source_lang: str, target_lang: str, translator_key: str, logger=None) -> TranslationEngine:
         """
         Create or retrieve an appropriate translation engine based on settings.
         
@@ -63,9 +63,9 @@ class TranslationEngineFactory:
         
         # Initialize with appropriate parameters
         if translator_key in cls.TRADITIONAL_ENGINES:
-            engine.initialize(settings, source_lang, target_lang)
+            engine.initialize(settings, source_lang, target_lang, logger=logger)
         else:
-            engine.initialize(settings, source_lang, target_lang, model_type=translator_key)
+            engine.initialize(settings, source_lang, target_lang, model_type=translator_key, logger=logger)
         
         # Cache the engine
         cls._engines[cache_key] = engine
