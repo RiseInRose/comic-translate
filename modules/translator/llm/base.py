@@ -64,11 +64,12 @@ class BaseLLMTranslation(LLMTranslation):
 
                 entire_translated_text = self._perform_translation(user_prompt, system_prompt, image)
                 try:
-                    set_texts_from_json(blk_list, entire_translated_text)
-                    for blk in blk_list:
-                        if blk.translation is not None and len(blk.translation) > 0:
-                            need_google_trans = False
-                            break
+                    if entire_translated_text is not None:
+                        set_texts_from_json(blk_list, entire_translated_text)
+                        for blk in blk_list:
+                            if blk.translation is not None and len(blk.translation) > 0:
+                                need_google_trans = False
+                                break
                 except Exception as ex:
                     if self.logger is not None:
                         self.logger.error(f"{type(self).__name__} vip trans set texts error: {str(ex)}")
@@ -134,8 +135,8 @@ class BaseLLMTranslation(LLMTranslation):
         
         except Exception as e:
             if self.logger is not None:
-                self.logger.error(f"{type(self).__name__} translation error: {str(ex)}")
-            print(f"{type(self).__name__} translation error: {str(e)}")
+                self.logger.error(f"{type(self).__name__} all translation error: {str(ex)}")
+            print(f"{type(self).__name__} all translation error: {str(e)}")
             
         return blk_list
     

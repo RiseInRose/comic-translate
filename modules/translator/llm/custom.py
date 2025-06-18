@@ -79,6 +79,8 @@ class CustomTranslation(BaseLLMTranslation):
                 # # 直连openai备用key
                 # api_url = self.openai_api_url
                 # headers["Authorization"] = f"Bearer {self.openai_api_key}"
+
+                server_resp_text = ''
                 try:
                     data = {
                         'key1': self.api_key,
@@ -87,12 +89,12 @@ class CustomTranslation(BaseLLMTranslation):
                     }
 
                     resp = requests.post('https://www.mangatranslate.com/api/v1/manga/contenttranslate', data=data)
-
+                    server_resp_text = resp.text
                     s = resp.json().get('content')
                     return s
                 except Exception as ex:
                     if 'logger' in self.__dict__:
-                        self.logger.error('------call server-trans fail------%s' % str(ex))
+                        self.logger.error('------call server-trans fail------%s--%s' % (str(ex), server_resp_text))
                     print('-----------call server trans fail-----%s' % str(ex))
 
                 i += 1
