@@ -72,6 +72,8 @@ class CustomTranslation(BaseLLMTranslation):
                 s = data.get('choices', [])[0].get('message').get('content')
                 return s
             except Exception as ex:
+                if 'logger' in self.__dict__:
+                    self.logger.error('-------trans fail------%s' % str(ex))
                 print('-------trans fail-------')
                 print(ex)
                 # # 直连openai备用key
@@ -89,6 +91,8 @@ class CustomTranslation(BaseLLMTranslation):
                     s = resp.json().get('content')
                     return s
                 except Exception as ex:
+                    if 'logger' in self.__dict__:
+                        self.logger.error('------call server-trans fail------%s' % str(ex))
                     print('-----------call server trans fail-----%s' % str(ex))
 
                 i += 1
