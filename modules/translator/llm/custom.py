@@ -61,6 +61,7 @@ class CustomTranslation(BaseLLMTranslation):
 
         print(payload)
 
+        error_arr = []
         api_url = self.api_url
         i = 0
         while i < 3:
@@ -72,8 +73,7 @@ class CustomTranslation(BaseLLMTranslation):
                 s = data.get('choices', [])[0].get('message').get('content')
                 return s
             except Exception as ex:
-                if 'logger' in self.__dict__:
-                    self.logger.error('-------trans fail------%s' % str(ex))
+                error_arr.append('-------trans fail------%s' % str(ex))
                 print('-------trans fail-------')
                 print(ex)
                 # # 直连openai备用key
@@ -93,11 +93,15 @@ class CustomTranslation(BaseLLMTranslation):
                     s = resp.json().get('content')
                     return s
                 except Exception as ex:
-                    if 'logger' in self.__dict__:
-                        self.logger.error('------call server-trans fail------%s--%s' % (str(ex), server_resp_text))
+                    error_arr.append('------call server-trans fail------%s--%s' % (str(ex), server_resp_text))
                     print('-----------call server trans fail-----%s' % str(ex))
 
                 i += 1
+
+        if 'logger' in self.__dict__:
+            self.logger.error('------重试三次翻译失败 trans fail------%s' % '\r\n'.join(error_arr))
+
+        return None
 
         # encoded_image = None
         # if self.img_as_llm_input:
