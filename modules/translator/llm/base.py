@@ -72,7 +72,7 @@ class BaseLLMTranslation(LLMTranslation):
                                 break
                 except Exception as ex:
                     if self.logger is not None:
-                        self.logger.error(f"{type(self).__name__} vip trans set texts error: {str(ex)}")
+                        self.logger.error(f"{type(self).__name__} 翻译结果无法使用: {str(ex)} -- {entire_translated_text}")
                     print(f"{type(self).__name__} vip trans set texts error: {str(ex)}")
 
                 print('-------vip trans time =%s' % (time.time() - t1))
@@ -102,7 +102,7 @@ class BaseLLMTranslation(LLMTranslation):
                 else:
                     print('google trans fail')
                     if self.logger is not None:
-                        self.logger.error("google trans fail")
+                        self.logger.error("google翻译没有成功")
 
                 print('-------google trans time =%s' % (time.time() - t2))
 
@@ -135,7 +135,7 @@ class BaseLLMTranslation(LLMTranslation):
         
         except Exception as e:
             if self.logger is not None:
-                self.logger.error(f"{type(self).__name__} all translation error: {str(ex)}")
+                self.logger.error(f"{type(self).__name__} 翻译异常失败: {str(ex)}")
             print(f"{type(self).__name__} all translation error: {str(e)}")
             
         return blk_list
