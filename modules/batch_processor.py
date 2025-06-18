@@ -323,7 +323,7 @@ class BatchProcessor:
                 if logger is not None:
                     logger.error(f"翻译超大图片，尺寸: {h}*{w}")
 
-            if h > 10000 or w > 10000:
+            if h > 20000 or w > 20000:
                 print('Image too large')
                 error_msg_arr.append(base_name + ' Image too large')
                 continue
