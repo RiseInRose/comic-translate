@@ -323,7 +323,7 @@ class BatchProcessor:
                 if logger is not None:
                     logger.error(f"翻译超大图片，尺寸: {h}*{w}")
 
-            if h > 30000 or w > 30000:
+            if h > 10000 or w > 10000:
                 print('Image too large')
                 error_msg_arr.append(base_name + ' Image too large')
                 continue
@@ -331,14 +331,9 @@ class BatchProcessor:
             # 大图片将宽度压缩为1600
             if h * w > 2400 * 1600 and w > 1600:
                 percent = 1600.0 / w
-                image = cv2.resize(image, (int(w*percent), int(h*percent)))
-                w = 1600.0
-                h *= percent
-
-            # 长图片高度压缩为10000
-            if h > 20000:
-                percent = 10000 / h
-                image = cv2.resize(image, (int(w * percent), int(h * percent)))
+                w = 1600
+                h = int(percent * h)
+                image = cv2.resize(image, (w, h))
 
             min_font_size, max_font_size = self.get_min_and_max_font_size(w)
 
@@ -476,7 +471,7 @@ class BatchProcessor:
             # Translation
             translator = Translator(settings, source_lang, target_lang)
             try:
-                translator.translate(blk_list, image, settings.settings_page.llm.extra_context)
+                translator.translate(blk_list, image, settings.settings_page.llm.extra_context, logger=logger)
             except Exception as e:
                 error_msg = str(e)
                 self.skip_save(directory, timestamp, base_name, extension, archive_bname, image)
