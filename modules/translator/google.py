@@ -13,7 +13,7 @@ class GoogleTranslation(TraditionalTranslation):
         self.source_lang_code = None
         self.target_lang_code = None
         
-    def initialize(self, settings: Any, source_lang: str, target_lang: str) -> None:
+    def initialize(self, settings: Any, source_lang: str, target_lang: str, **kwargs) -> None:
         """
         Initialize Google Translate engine.
         

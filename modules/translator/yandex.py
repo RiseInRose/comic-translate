@@ -15,7 +15,7 @@ class YandexTranslation(TraditionalTranslation):
         self.api_key = None
         self.folder_id = None
         
-    def initialize(self, settings: Any, source_lang: str, target_lang: str) -> None:
+    def initialize(self, settings: Any, source_lang: str, target_lang: str, **kwargs) -> None:
         self.source_lang_code = self.get_language_code(source_lang)
         self.target_lang_code = self.get_language_code(target_lang)
 

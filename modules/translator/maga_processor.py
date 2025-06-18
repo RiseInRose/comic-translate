@@ -14,7 +14,7 @@ class Translator:
     - LLM-based translators (e.g GPT, Claude, Gemini, Deepseek, Custom)
     """
     
-    def __init__(self, main_page, source_lang: str = "", target_lang: str = ""):
+    def __init__(self, main_page, source_lang: str = "", target_lang: str = "", logger=None):
         """
         Initialize translator with settings and languages.
         
@@ -39,7 +39,8 @@ class Translator:
             self.settings,
             self.source_lang_en,
             self.target_lang_en,
-            self.translator_key
+            self.translator_key,
+            logger=logger
         )
         print(self.engine)
         

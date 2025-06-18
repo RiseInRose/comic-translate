@@ -66,7 +66,7 @@ class BatchProcessor:
 
         return min_font_size, max_font_size
 
-    def process_one_image(self, settings, image, source_lang, target_lang):
+    def process_one_image(self, settings, image, source_lang, target_lang, logger=None):
         h, w, _ = image.shape
         if h * w > 2400 * 3600:
             print('Image too large')
@@ -186,7 +186,7 @@ class BatchProcessor:
         cur_t = time.time()
         print('------------------Translation------------------')
         # Translation
-        translator = Translator(settings, source_lang, target_lang)
+        translator = Translator(settings, source_lang, target_lang, logger=logger)
         try:
             translator.translate(blk_list, image, settings.settings_page.llm.extra_context)
         except Exception as e:
@@ -469,7 +469,7 @@ class BatchProcessor:
             cur_t = time.time()
             print('------------------Translation------------------')
             # Translation
-            translator = Translator(settings, source_lang, target_lang)
+            translator = Translator(settings, source_lang, target_lang, logger=logger)
             try:
                 translator.translate(blk_list, image, settings.settings_page.llm.extra_context, logger=logger)
             except Exception as e:
