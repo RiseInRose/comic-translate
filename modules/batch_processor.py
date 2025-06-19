@@ -327,12 +327,34 @@ class BatchProcessor:
         else:
             return output_image, sv_pth
 
+    def combine_one_image(self, result_im, clip_arrs, timestamp, index, total_images, error_msg_arr, image_path, output_path, archive_info,
+                       image, blk_list, one_image_state, settings, need_save_path, need_save_image,
+                       progress_callback: Callable[[int, int, int, int, bool, str], None] = None,
+                       cancel_check: Callable[[], bool] = None, logger=None):
+        tmp_file = 'tmp_%s.jpg' % (time.time())
+        cv2.imwrite(tmp_file, result_im)
+        combine_image = cv2.imread(tmp_file)
+        combine_blk_list = self.get_blk_list(settings, combine_image)
+        output_image, save_path = self.deal_one_image(timestamp, index, total_images, error_msg_arr, image_path,
+                                                      output_path,
+                                                      archive_info,
+                                                      combine_image, combine_blk_list, one_image_state, settings, need_save_path,
+                                                      need_save_image, progress_callback, cancel_check, logger)
+        for y1, y2, sy1, sy2 in clip_arrs:
+            image[sy1 + 3:sy2 - 3, :, :] = output_image[y1 + 3:y2 - 3, :, :]
+
+        try:
+            if os.path.isfile(tmp_file):
+                os.remove(tmp_file)
+        except Exception as ex:
+            print(ex)
+        return image, save_path
 
     def process_one_image(self, settings, image, source_lang, target_lang, logger=None):
         h, w, _ = image.shape
-        if h * w > 2400 * 3600:
-            print('Image too large')
-            return False, 'Image too large'
+        # if h * w > 2400 * 3600:
+        #     print('Image too large')
+        #     return False, 'Image too large'
         # 用日文代替繁体中文，会有更好的识别效果
         if source_lang == 'Traditional Chinese':
             source_lang = 'Japanese'
@@ -371,20 +393,34 @@ class BatchProcessor:
         if h > w * 2.1:
             print('合并处理长图')
             result_im, clip_arrs = self.get_combine_clip_arr(image, blk_list)
-            tmp_file = 'tmp_%s.jpg'%(time.time())
-            cv2.imwrite(tmp_file, result_im)
-            combine_image = cv2.imread(tmp_file)
-            combine_blk_list = self.get_blk_list(settings, combine_image)
-            output_image, save_path = self.deal_one_image(datetime.now().strftime("%b-%d-%Y_%I-%M-%S%p"), 1, 1, [], None, None,
-                                               None,
-                                               combine_image, combine_blk_list, one_image_state, settings, False, False, None, None, logger)
-            for y1, y2, sy1, sy2 in clip_arrs:
-                image[sy1+3:sy2-3,:,:] = output_image[y1+3:y2-3,:,:]
-            output_image = image
-            try:
-                os.remove(tmp_file)
-            except Exception as ex:
-                print(ex)
+            if len(clip_arrs)>=2 and result_im.shape[0] > result_im.shape[1] * 3:
+                # 依然过长，分两段
+                print('依然过长分两段')
+                sn = len(clip_arrs) // 2
+                y_pos = clip_arrs[sn-1][1]
+                mid_y = result_im.shape[0] // 2
+                for i in range(len(clip_arrs)):
+                    if abs(clip_arrs[i][1] - mid_y) < abs(y_pos - mid_y):
+                        y_pos = clip_arrs[i][1]
+                        sn = i
+
+                output_image, save_path = self.combine_one_image(result_im[:y_pos,:,:], clip_arrs[:sn],
+                                                                 datetime.now().strftime("%b-%d-%Y_%I-%M-%S%p"), 1, 1,
+                                                                 [], None, None,
+                                                                 None, image, blk_list, one_image_state, settings,
+                                                                 False, False, None, None, logger)
+
+                for tmp_arr in clip_arrs:
+                    tmp_arr[0] -= y_pos
+                    tmp_arr[1] -= y_pos
+                output_image, save_path = self.combine_one_image(result_im[y_pos:,:,:], clip_arrs[sn:],
+                                                                 datetime.now().strftime("%b-%d-%Y_%I-%M-%S%p"), 1, 1,
+                                                                 [], None, None,
+                                                                 None, output_image, blk_list, one_image_state, settings,
+                                                                 False, False, None, None, logger)
+            else:
+                output_image, save_path = self.combine_one_image(result_im, clip_arrs,datetime.now().strftime("%b-%d-%Y_%I-%M-%S%p"), 1, 1, [], None, None,
+                                                   None, image, blk_list, one_image_state, settings, False, False, None, None, logger)
         else:
             output_image, save_path = self.deal_one_image(datetime.now().strftime("%b-%d-%Y_%I-%M-%S%p"), 1, 1, [], None, None, None,
                                                image, blk_list, one_image_state, settings, False, False, None, None, logger)
@@ -427,13 +463,15 @@ class BatchProcessor:
                 break
 
             image = cv2.imread(image_path)
+            if image is None:
+                continue
             h, w, _ = image.shape
 
             if h * w > 3200 * 2400:
                 if logger is not None:
                     logger.error(f"翻译超大图片，尺寸: {h}*{w}")
 
-            if h > 10000 or w > 10000:
+            if h > 20000 or w > 10000:
                 print('Image too large')
                 error_msg_arr.append(' Image too large')
                 continue
@@ -473,25 +511,42 @@ class BatchProcessor:
             print(blk_list)
 
             # 判断是否是长图
-            if h > w * 3.1:
+            if h > w * 2.1:
                 print('合并处理长图')
                 result_im, clip_arrs = self.get_combine_clip_arr(image, blk_list)
-                tmp_file = 'tmp_%s.jpg' % (time.time())
-                cv2.imwrite(tmp_file, result_im)
-                combine_image = cv2.imread(tmp_file)
-                combine_blk_list = self.get_blk_list(settings, combine_image)
-                output_image, save_path = self.deal_one_image(timestamp, 1, 1, error_msg_arr, image_path,
+                if len(clip_arrs) >= 2 and result_im.shape[0] > result_im.shape[1] * 3:
+                    # 依然过长，分两段
+                    print('依然过长分两段')
+                    sn = len(clip_arrs) // 2
+                    y_pos = clip_arrs[sn - 1][1]
+                    mid_y = result_im.shape[0] // 2
+                    for i in range(len(clip_arrs)):
+                        if abs(clip_arrs[i][1] - mid_y) < abs(y_pos - mid_y):
+                            y_pos = clip_arrs[i][1]
+                            sn = i
+
+                    output_image, save_path = self.combine_one_image(result_im[:y_pos, :, :], clip_arrs[:sn],
+                                                                     timestamp, 1, 1, error_msg_arr, image_path,
+                                                                     output_path,
+                                                                     archive_info, image, blk_list, one_image_state,
+                                                                     settings, True, False,
+                                                                     None, cancel_check, logger)
+
+                    for tmp_arr in clip_arrs:
+                        tmp_arr[0] -= y_pos
+                        tmp_arr[1] -= y_pos
+                    output_image, save_path = self.combine_one_image(result_im[y_pos:, :, :], clip_arrs[sn:],
+                                                                     timestamp, 1, 1, error_msg_arr, image_path,
+                                                                     output_path,
+                                                                     archive_info, image, blk_list, one_image_state,
+                                                                     settings, True, False,
+                                                                     None, cancel_check, logger)
+                else:
+                    output_image, save_path = self.combine_one_image(result_im, clip_arrs, timestamp, 1, 1, error_msg_arr, image_path,
                                                   output_path,
-                                                  archive_info, combine_image, combine_blk_list, one_image_state, settings, True, False,
+                                                  archive_info, image, blk_list, one_image_state, settings, True, False,
                                                   None, cancel_check, logger)
-                for y1, y2, sy1, sy2 in clip_arrs:
-                    image[sy1 + 3:sy2 - 3, :, :] = output_image[y1 + 3:y2 - 3, :, :]
-                cv2.imwrite(save_path, image)
-                try:
-                    if os.path.isfile(tmp_file):
-                        os.remove(tmp_file)
-                except Exception as ex:
-                    print(ex)
+                cv2.imwrite(save_path, output_image)
             else:
                 self.deal_one_image(timestamp, index, total_images, error_msg_arr, image_path, output_path,
                                                   archive_info, image, blk_list, one_image_state, settings, True, True,
@@ -502,14 +557,14 @@ class BatchProcessor:
         else:
             return True, ''
 
-    def get_y_ranges(self, blk_list, h):
+    def get_y_ranges(self, blk_list, h, offset_ratio=0.1):
         arr = []
         for blk in blk_list:
             x1, y1, x2, y2 = blk.xyxy
-            y1 -= (y2 - y1) // 2
+            y1 -= int((y2 - y1) * offset_ratio)
             if y1 < 0:
                 y1 = 0
-            y2 += (y2 - y1) // 2
+            y2 += int((y2 - y1) * offset_ratio)
             if y2 > h:
                 y2 = h
 
@@ -529,8 +584,8 @@ class BatchProcessor:
         print(arr)
         return arr
 
-    def get_combine_clip_arr(self, image, blk_list):
-        y_ranges = self.get_y_ranges(blk_list, image.shape[0])
+    def get_combine_clip_arr(self, image, blk_list, offset_ratio=0.1):
+        y_ranges = self.get_y_ranges(blk_list, image.shape[0], offset_ratio=offset_ratio)
 
         import numpy as np
         h, w, d = image.shape
