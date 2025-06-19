@@ -473,7 +473,7 @@ class BatchProcessor:
             print(blk_list)
 
             # 判断是否是长图
-            if h > w * 3.1:
+            if h > w * 2.1:
                 print('合并处理长图')
                 result_im, clip_arrs = self.get_combine_clip_arr(image, blk_list)
                 tmp_file = 'tmp_%s.jpg' % (time.time())
