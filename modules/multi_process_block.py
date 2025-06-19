@@ -79,6 +79,8 @@ class OutlineInfo:
 def process_block(blk, render_settings, trg_lng_cd):
     """处理单个文本块的线程函数"""
     x1, y1, width, height = blk.xywh
+    # print('process_block-xywh-%s,%s,%s,%s' % (x1, y1, width, height))
+
     translation = blk.translation
     if not translation or len(translation) == 1:
         return None
@@ -102,10 +104,16 @@ def process_block(blk, render_settings, trg_lng_cd):
         break_long_words=trg_lng_cd in {'zh-CN', 'zh-TW', 'zh', 'ja'}
     )
 
+    # print('alignment-%s' % render_settings.alignment)
+    # print('alignment-w-h-%s-%s' % (msg_width, msg_height))
+
+    # print('---pyside_word_wrap---%s---%s-----%s'%(font_size, msg_width, msg_height))
+
     if any(lang in trg_lng_cd.lower() for lang in ['zh', 'ja', 'th']):
         translation = translation.replace(' ', '')
 
     y1 += (height - msg_height) * 0.3
+    x1 += (width - msg_width) * 0.5
 
     return {
         'text': translation,
