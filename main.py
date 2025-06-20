@@ -64,6 +64,7 @@ class Settings:
                 self.settings_page.tr("Hungarian"): "Hungarian",
                 self.settings_page.tr("Finnish"): "Finnish",
                 self.settings_page.tr("Arabic"): "Arabic",
+                self.settings_page.tr("Hindi"): "Hindi",
             }
         if self.inpaint_config is None:
             self.inpaint_config = Config()
@@ -188,7 +189,7 @@ if __name__ == '__main__':
 
         # source_language = 'Traditional Chinese'
         source_language = 'Japanese'
-        target_language = 'Korean'  # 'Russian' # 'Korean' # 'Simplified Chinese' # 'Chinese' # 'English' #'Traditional Chinese' # 'Japanese'
+        target_language = 'Hindi'  # 'Russian' # 'Korean' # 'Simplified Chinese' # 'Chinese' # 'English' #'Traditional Chinese' # 'Japanese'
         settings = Settings(source_language, target_language)
         processor = BatchProcessor()
         # flag, output_image = processor.process_one_image(settings, input_image, 'Japanese', target_language)

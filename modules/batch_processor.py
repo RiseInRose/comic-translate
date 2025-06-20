@@ -469,7 +469,7 @@ class BatchProcessor:
 
             if h * w > 3200 * 2400:
                 if logger is not None:
-                    logger.error(f"翻译超大图片，尺寸: {h}*{w}")
+                    logger.warning(f"翻译超大图片，尺寸: {h}*{w}")
 
             if h > 20000 or w > 10000:
                 print('Image too large')
@@ -498,7 +498,7 @@ class BatchProcessor:
 
             if len(blk_list) > 30:
                 if logger is not None:
-                    logger.error(f"翻译多文字快图片，文字块数量: {len(blk_list)}")
+                    logger.warning(f"翻译多文字快图片，文字块数量: {len(blk_list)}")
 
             if len(blk_list) > 300:
                 print('Too much text in one image')

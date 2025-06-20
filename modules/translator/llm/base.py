@@ -72,7 +72,7 @@ class BaseLLMTranslation(LLMTranslation):
                                 break
                 except Exception as ex:
                     if self.logger is not None:
-                        self.logger.error(f"{type(self).__name__} 翻译结果无法使用: {str(ex)} -- {entire_translated_text}")
+                        self.logger.warning(f"{type(self).__name__} 翻译结果无法使用: {str(ex)} -- {entire_translated_text}")
                     print(f"{type(self).__name__} vip trans set texts error: {str(ex)}")
 
                 print('-------vip trans time =%s' % (time.time() - t1))
