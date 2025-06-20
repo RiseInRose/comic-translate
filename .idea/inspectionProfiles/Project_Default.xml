@@ -1,0 +1,81 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="Eslint" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <value>
+          <list size="58">
+            <item index="0" class="java.lang.String" itemvalue="readme-renderer" />
+            <item index="1" class="java.lang.String" itemvalue="pytest" />
+            <item index="2" class="java.lang.String" itemvalue="opencc-python-reimplemented" />
+            <item index="3" class="java.lang.String" itemvalue="opencv-python" />
+            <item index="4" class="java.lang.String" itemvalue="langdetect" />
+            <item index="5" class="java.lang.String" itemvalue="httpx" />
+            <item index="6" class="java.lang.String" itemvalue="shapely" />
+            <item index="7" class="java.lang.String" itemvalue="protobuf" />
+            <item index="8" class="java.lang.String" itemvalue="backports.cached-property" />
+            <item index="9" class="java.lang.String" itemvalue="cython" />
+            <item index="10" class="java.lang.String" itemvalue="python-dotenv" />
+            <item index="11" class="java.lang.String" itemvalue="ctranslate2" />
+            <item index="12" class="java.lang.String" itemvalue="marshmallow" />
+            <item index="13" class="java.lang.String" itemvalue="pyclipper" />
+            <item index="14" class="java.lang.String" itemvalue="torchvision" />
+            <item index="15" class="java.lang.String" itemvalue="aioshutil" />
+            <item index="16" class="java.lang.String" itemvalue="sentencepiece" />
+            <item index="17" class="java.lang.String" itemvalue="safetensors" />
+            <item index="18" class="java.lang.String" itemvalue="manga-ocr" />
+            <item index="19" class="java.lang.String" itemvalue="torch-summary" />
+            <item index="20" class="java.lang.String" itemvalue="accelerate" />
+            <item index="21" class="java.lang.String" itemvalue="uvicorn" />
+            <item index="22" class="java.lang.String" itemvalue="huggingface_hub" />
+            <item index="23" class="java.lang.String" itemvalue="transformers" />
+            <item index="24" class="java.lang.String" itemvalue="pydantic" />
+            <item index="25" class="java.lang.String" itemvalue="cryptography" />
+            <item index="26" class="java.lang.String" itemvalue="omegaconf" />
+            <item index="27" class="java.lang.String" itemvalue="bitsandbytes" />
+            <item index="28" class="java.lang.String" itemvalue="deepl" />
+            <item index="29" class="java.lang.String" itemvalue="openai" />
+            <item index="30" class="java.lang.String" itemvalue="groq" />
+            <item index="31" class="java.lang.String" itemvalue="scikit-image" />
+            <item index="32" class="java.lang.String" itemvalue="freetype-py" />
+            <item index="33" class="java.lang.String" itemvalue="editdistance" />
+            <item index="34" class="java.lang.String" itemvalue="py3langid" />
+            <item index="35" class="java.lang.String" itemvalue="networkx" />
+            <item index="36" class="java.lang.String" itemvalue="requests" />
+            <item index="37" class="java.lang.String" itemvalue="numpy" />
+            <item index="38" class="java.lang.String" itemvalue="kornia" />
+            <item index="39" class="java.lang.String" itemvalue="pyhyphen" />
+            <item index="40" class="java.lang.String" itemvalue="onnxruntime" />
+            <item index="41" class="java.lang.String" itemvalue="nest-asyncio" />
+            <item index="42" class="java.lang.String" itemvalue="websockets" />
+            <item index="43" class="java.lang.String" itemvalue="timm" />
+            <item index="44" class="java.lang.String" itemvalue="aiofiles" />
+            <item index="45" class="java.lang.String" itemvalue="torch" />
+            <item index="46" class="java.lang.String" itemvalue="python-multipart" />
+            <item index="47" class="java.lang.String" itemvalue="arabic-reshaper" />
+            <item index="48" class="java.lang.String" itemvalue="tqdm" />
+            <item index="49" class="java.lang.String" itemvalue="pandas" />
+            <item index="50" class="java.lang.String" itemvalue="langcodes" />
+            <item index="51" class="java.lang.String" itemvalue="fastapi" />
+            <item index="52" class="java.lang.String" itemvalue="colorama" />
+            <item index="53" class="java.lang.String" itemvalue="tensorboardX" />
+            <item index="54" class="java.lang.String" itemvalue="aiohttp" />
+            <item index="55" class="java.lang.String" itemvalue="einops" />
+            <item index="56" class="java.lang.String" itemvalue="open_clip_torch" />
+            <item index="57" class="java.lang.String" itemvalue="ImageHash" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyPep8NamingInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredErrors">
+        <list>
+          <option value="N803" />
+          <option value="N806" />
+          <option value="N802" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
