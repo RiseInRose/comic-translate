@@ -72,10 +72,17 @@ class Settings:
 
         from pathlib import Path
         src_folder = Path(__file__).parent
-        if 'Chinese' in target_language:
-            self.render_settings.font_family = os.path.join(src_folder, 'fonts/msyh.ttc')
-        if target_language == 'Japanese':
-            self.render_settings.font_family = os.path.join(src_folder, 'fonts/msgothic.ttc')
+        if 'Traditional Chinese' == target_language:
+            self.render_settings.font_family = os.path.join(src_folder, 'fonts/ToneOZ-Tsuipita-TC.ttf')
+        elif 'Chinese' in target_language:
+            self.render_settings.font_family = os.path.join(src_folder, 'fonts/ToneOZ-Tsuipita-TC.ttf')
+        elif target_language == 'Japanese':
+            self.render_settings.font_family = os.path.join(src_folder, 'fonts/KleeOne-SemiBold.ttf')
+        elif target_language == 'Korean':
+            self.render_settings.font_family = os.path.join(src_folder, 'fonts/NotoSerifCJKkr-SemiBold.otf')
+        elif target_language in {'English', 'French', 'German', 'Spanish', 'Italian', 'Dutch', 'Portuguese',
+                                 'Brazilian Portuguese'}:
+            self.render_settings.font_family = os.path.join(src_folder, 'fonts/anime_ace_3.ttf')
         else:
             self.render_settings.font_family = os.path.join(src_folder, 'fonts/Arial-Unicode-Regular.ttf')
         print('font file:', self.render_settings.font_family)
@@ -168,25 +175,44 @@ if __name__ == '__main__':
     # main()
 
     if len(sys.argv) < 2:
-        print("请提供图片文件路径作为参数")
+        import logging
+        logger = logging.getLogger('test')
+        input_path = '/Users/mac/Documents/manga/test2/input'
+        output_path = '/Users/mac/Documents/manga/test2/output'
+        source_language = 'English'
+        target_language = 'Simplified Chinese'
+        run(input_path, output_path, target_language, source_language, logger=logger)
+    else:
+        image_path = sys.argv[1]
+        input_image = cv2.imread(image_path)
 
-    image_path = sys.argv[1]
-    input_image = cv2.imread(image_path)
+        # source_language = 'Traditional Chinese'
+        source_language = 'Japanese'
+        target_language = 'Korean'  # 'Russian' # 'Korean' # 'Simplified Chinese' # 'Chinese' # 'English' #'Traditional Chinese' # 'Japanese'
+        settings = Settings(source_language, target_language)
+        processor = BatchProcessor()
+        # flag, output_image = processor.process_one_image(settings, input_image, 'Japanese', target_language)
+        t1 = time.time()
+        # flag, covert_image = processor.run_render_block(settings, input_image, source_language, target_language)
+        # output_image = covert_image
 
-    # source_language = 'Traditional Chinese'
-    source_language = 'Japanese'
-    target_language = 'Chinese'  # 'Russian' # 'Korean' # 'Simplified Chinese' # 'Chinese' # 'English' #'Traditional Chinese' # 'Japanese'
-    settings = Settings(source_language, target_language)
-    processor = BatchProcessor()
-    # flag, output_image = processor.process_one_image(settings, input_image, 'Japanese', target_language)
-    t1 = time.time()
-    # flag, output_image = processor.run_render(settings, input_image, source_language, target_language)
-    flag, output_image = processor.process_one_image(settings, input_image, source_language, target_language)
+        # cv2.imwrite('covert_image.png', covert_image)
+        # covert_input_image = cv2.imread('covert_image.png')
+        # import logging
+        # logger = logging.getLogger('test')
+        # flag, output_image = processor.process_one_image(settings, covert_input_image, source_language, target_language, logger=logger)
+        # for y1, y2, sy1, sy2 in clip_arrs:
+        #     input_image[sy1+3:sy2-3,:,:] = output_image[y1+3:y2-3,:,:]
+        # output_image = input_image
 
-    if flag:
-        cv2.imwrite('output.png', output_image)
+        import logging
+        logger = logging.getLogger('test')
+        flag, output_image = processor.process_one_image(settings, input_image, source_language, target_language, logger=logger)
 
-    print('------full-time------%s' % (time.time() - t1))
+        if flag:
+            cv2.imwrite('output.png', output_image)
+
+        print('------full-time------%s' % (time.time() - t1))
 
 
 

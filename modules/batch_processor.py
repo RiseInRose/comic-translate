@@ -376,8 +376,8 @@ class BatchProcessor:
         #     settings.render_settings.min_font_size = 16
 
         blk_list = self.get_blk_list(settings, image)
-        if len(blk_list) > 30:
-            return False, 'Too much text in image'
+        # if len(blk_list) > 30:
+        #     return False, 'Too much text in image'
 
         import time
         cur_t = time.time()
