@@ -99,7 +99,7 @@ class CustomTranslation(BaseLLMTranslation):
                 i += 1
 
         if 'logger' in self.__dict__:
-            self.logger.error('------重试了三次翻译 trans fail------%s' % '\r\n'.join(error_arr))
+            self.logger.warning('------重试了三次翻译 trans fail------%s' % '\r\n'.join(error_arr))
 
         return None
 
