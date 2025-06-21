@@ -81,9 +81,9 @@ def process_block(blk, render_settings, trg_lng_cd):
     start_x, start_y, width, height = blk.xywh
     # print('process_block-xywh-%s,%s,%s,%s' % (x1, y1, width, height))
 
-    if blk.bubble_xyxy is not None:
-        bbx1, bby1, bbx2, bby2 = blk.bubble_xyxy
-        width = int((bbx2 - bbx1)*0.5 + width*0.5)
+    # if blk.bubble_xyxy is not None:
+    #     bbx1, bby1, bbx2, bby2 = blk.bubble_xyxy
+    #     width = int((bbx2 - bbx1)*0.2 + width*0.8)
 
     translation = blk.translation
     if not translation or len(translation) == 1:

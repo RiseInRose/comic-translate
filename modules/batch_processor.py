@@ -41,13 +41,13 @@ class BatchProcessor:
         if w >= 1600:
             if max_font_size > 44:
                 max_font_size = 44
-            if min_font_size > 20:
-                min_font_size = 20
+            if min_font_size > 14:
+                min_font_size = 14
         elif w >= 1280:
             if max_font_size > 40:
                 max_font_size = 40
-            if min_font_size > 18:
-                min_font_size = 18
+            if min_font_size > 14:
+                min_font_size = 14
         elif w >= 720:
             if max_font_size < 32:
                 max_font_size = 32
@@ -81,7 +81,8 @@ class BatchProcessor:
             self.block_detector_cache = TextBlockDetector(
                 os.path.join(folder, 'models/detection/comic-speech-bubble-detector.pt'),
                 os.path.join(folder, 'models/detection/comic-text-segmenter.pt'),
-                os.path.join(folder, 'models/detection/manga-text-detector.pt'),
+                # os.path.join(folder, 'models/detection/manga-text-detector.pt'),
+                os.path.join(folder, 'models/detection/ysgyolo_S150best.pt'), # 识别块更多
                 device
             )
 
