@@ -54,13 +54,13 @@ class BatchProcessor:
             if min_font_size < 14:
                 min_font_size = 14
         elif w >= 600:
-            if max_font_size < 24:
-                max_font_size = 24
+            if max_font_size < 32:
+                max_font_size = 32
             if min_font_size < 12:
                 min_font_size = 12
         else:
-            if max_font_size < 18:
-                max_font_size = 18
+            if max_font_size < 32:
+                max_font_size = 32
             if min_font_size < 10:
                 min_font_size = 10
 
@@ -151,6 +151,19 @@ class BatchProcessor:
                 print(time.time() - cur_t)
                 print('------------------ocr.process------------------')
                 self.ocr.process(image, blk_list)
+
+                empty_count = 0
+                for blk in blk_list:
+                    if blk.text is None or len(blk.text.strip()) == 0:
+                        empty_count += 1
+
+                useful_count = len(blk_list) - empty_count
+                if useful_count == 0:
+                    raise Exception('没有ocr有效文字，block总数:%s'%len(blk_list))
+
+                if empty_count > useful_count * 2:
+                    raise Exception('ocr有效文字块数过少，%s/%s' % (useful_count, len(blk_list)))
+
                 source_lang_english = settings.lang_mapping.get(source_lang, source_lang)
                 rtl = True if source_lang_english == 'Japanese' else False
                 blk_list = sort_blk_list(blk_list, rtl)
@@ -645,9 +658,38 @@ class BatchProcessor:
             print(x1, x2, y1, y2)
             xy1 = (x1, y1)
             xy2 = (x2, y2)
-            cv2.rectangle(im, xy1, xy2, (0,0,255), thickness=4, lineType=None, shift=None)
+            cv2.rectangle(im, xy1, xy2, (255,0,0), thickness=4, lineType=None, shift=None)
 
-            # cv2.putText(im, "test", (x1, y1 + 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 1)
+        for blk in blk_list:
+            if blk.bubble_xyxy is not None:
+                x1, y1, x2, y2 = blk.bubble_xyxy
+                print(x1, x2, y1, y2)
+                xy1 = (x1, y1)
+                xy2 = (x2, y2)
+                cv2.rectangle(im, xy1, xy2, (0,255,0), thickness=4, lineType=None, shift=None)
+
+                # cv2.putText(im, "test", (x1, y1 + 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 1)
+
+        for blk in blk_list:
+            for x1, y1, x2, y2 in blk.inpaint_bboxes:
+                xy1 = (x1, y1)
+                xy2 = (x2, y2)
+                cv2.rectangle(im, xy1, xy2, (0, 255, 255), thickness=2, lineType=None, shift=None)
+
+        for blk in blk_list:
+            sumx = 0
+            sumy = 0
+            for x1, y1, x2, y2 in blk.inpaint_bboxes:
+                sumx += (x1+x2)/2
+                sumy += (y1+y2)/2
+            mx = int(sumx / len(blk.inpaint_bboxes))
+            my = int(sumy / len(blk.inpaint_bboxes))
+
+            x1, x2 = mx - 10, mx + 10
+            y1, y2 = my - 10, my + 10
+            xy1 = (x1, y1)
+            xy2 = (x2, y2)
+            cv2.rectangle(im, xy1, xy2, (0, 0, 255), thickness=4, lineType=None, shift=None)
 
         return True, im
 
