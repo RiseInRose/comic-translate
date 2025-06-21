@@ -78,8 +78,12 @@ class OutlineInfo:
 
 def process_block(blk, render_settings, trg_lng_cd):
     """处理单个文本块的线程函数"""
-    x1, y1, width, height = blk.xywh
+    start_x, start_y, width, height = blk.xywh
     # print('process_block-xywh-%s,%s,%s,%s' % (x1, y1, width, height))
+
+    if blk.bubble_xyxy is not None:
+        bbx1, bby1, bbx2, bby2 = blk.bubble_xyxy
+        width = int((bbx2 - bbx1)*0.5 + width*0.5)
 
     translation = blk.translation
     if not translation or len(translation) == 1:
@@ -112,8 +116,23 @@ def process_block(blk, render_settings, trg_lng_cd):
     if any(lang in trg_lng_cd.lower() for lang in ['zh', 'ja', 'th']):
         translation = translation.replace(' ', '')
 
-    y1 += (height - msg_height) * 0.3
-    x1 += (width - msg_width) * 0.5
+    # # 将渲染文字块位置居中
+    start_x += (width - msg_width) * 0.5
+    start_y += (height - msg_height) * 0.5
+
+    if blk.inpaint_bboxes is not None:
+        # 计算文字中心，往文字计算中心做偏移，可以优化处理部分翻译矩形文字会超出气泡的情况
+        sumx = 0
+        sumy = 0
+        for x1, y1, x2, y2 in blk.inpaint_bboxes:
+            sumx += (x1 + x2) / 2
+            sumy += (y1 + y2) / 2
+        mx = int(sumx / len(blk.inpaint_bboxes))
+        my = int(sumy / len(blk.inpaint_bboxes))
+
+        bx, by = blk.center
+        start_x += (mx - bx)
+        start_y += (my - by)
 
     return {
         'text': translation,
@@ -127,7 +146,7 @@ def process_block(blk, render_settings, trg_lng_cd):
         'bold': render_settings.bold,
         'italic': render_settings.italic,
         'underline': render_settings.underline,
-        'position': (x1, y1),
+        'position': (start_x, start_y),
         'rotation': blk.angle,
         'scale': 1.0,
         'transform_origin': blk.tr_origin_point,
