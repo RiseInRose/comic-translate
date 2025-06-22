@@ -75,7 +75,10 @@ def set_texts_from_json(blk_list: List[TextBlock], json_string: str):
             block_key = f"block_{idx}"
             if block_key in translation_dict:
                 blk.translation = translation_dict[block_key]
+                if blk.translation is None or len(blk.translation) == 0 and (blk.text is not None and len(blk.text)>0):
+                    blk.translation = blk.text
             else:
+                blk.translation = blk.text
                 print(f"Warning: {block_key} not found in JSON string.")
     else:
         print("No JSON found in the input string.")
