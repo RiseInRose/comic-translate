@@ -98,7 +98,11 @@ class BaseLLMTranslation(LLMTranslation):
                     print('google_trans success')
                     content = google_trans_result.get('content')
                     for blk in blk_list:
-                        blk.translation = content.get(blk.text)
+                        tmp_text = content.get(blk.text)
+                        if tmp_text is None or len(tmp_text) == 0 and (blk.text is not None and len(blk.text)>0):
+                            blk.translation = blk.text
+                        else:
+                            blk.translation = content.get(blk.text)
                 else:
                     print('google trans fail')
                     if self.logger is not None:
