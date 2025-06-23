@@ -90,3 +90,70 @@ class ImageSaveRenderer:
         final_image = self.render_to_image()
         cv2.imwrite(output_path, final_image)
 
+    @staticmethod
+    def add_watermark(image, text='mangatranslate.com'):
+        h, w, _ = image.shape
+
+        # 将OpenCV图像转换为PIL图像
+        pil_image = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+
+        # 创建一个透明图层用于绘制水印
+        watermark = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(watermark)
+
+        # 使用指定的字体文件
+        font_size = 24  # 设置较大的字号
+        try:
+            # 使用项目中的anime_ace_3.ttf字体
+            font = ImageFont.truetype('fonts/Arial-Unicode-Regular.ttf', font_size)
+        except:
+            # 如果找不到字体文件，使用默认字体
+            font = ImageFont.load_default()
+
+        # 获取文字尺寸
+        bbox = draw.textbbox((0, 0), text, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+
+        # 创建一个临时图像来绘制文字
+        temp_img = Image.new('RGBA', (text_width + 50, text_height + 50), (0, 0, 0, 0))
+        temp_draw = ImageDraw.Draw(temp_img)
+
+        # 绘制白色阴影（偏移几个像素）
+        shadow_offset = 2
+        shadow_alpha = int(255 * 0.95)  # 阴影
+        temp_draw.text((25 + shadow_offset, 25 + shadow_offset), text, font=font,
+                       fill=(255, 255, 255, shadow_alpha))  # 白色阴影
+        temp_draw.text((25 - shadow_offset, 25 + shadow_offset), text, font=font, fill=(255, 255, 255, shadow_alpha))
+        temp_draw.text((25 + shadow_offset, 25 - shadow_offset), text, font=font, fill=(255, 255, 255, shadow_alpha))
+        temp_draw.text((25 - shadow_offset, 25 - shadow_offset), text, font=font, fill=(255, 255, 255, shadow_alpha))
+
+        # 在临时图像上绘制黑色文字（主文字），多次绘制实现加粗效果，设置透明度
+        text_alpha = int(255 * 0.7)  # 设置0.3的透明度
+        temp_draw.text((25, 25), text, font=font, fill=(0, 0, 0, text_alpha))
+        # temp_draw.text((25 + 1, 25), text, font=font, fill=(0, 0, 0, text_alpha))  # 右偏移1像素
+        # temp_draw.text((25, 25 + 1), text, font=font, fill=(0, 0, 0, text_alpha))  # 下偏移1像素
+        # temp_draw.text((25 + 1, 25 + 1), text, font=font, fill=(0, 0, 0, text_alpha))  # 右下偏移1像素
+
+        # 不再旋转文字，直接使用原图像
+        rotated_text = temp_img
+
+        # 计算粘贴位置（右下角）
+        paste_x = w - rotated_text.width - 5  # 减少右边距，更靠近右边
+        paste_y = h - rotated_text.height - 5  # 减少下边距，更靠近底部
+
+        # 确保不超出边界
+        paste_x = max(0, paste_x)
+        paste_y = max(0, paste_y)
+
+        # 将旋转后的文字粘贴到水印图层
+        watermark.paste(rotated_text, (paste_x, paste_y), rotated_text)
+
+        # 将水印合成到原图像
+        pil_image = pil_image.convert('RGBA')
+        combined = Image.alpha_composite(pil_image, watermark)
+
+        # 转换回OpenCV格式
+        result_image = cv2.cvtColor(np.array(combined.convert('RGB')), cv2.COLOR_RGB2BGR)
+        
+        return result_image
