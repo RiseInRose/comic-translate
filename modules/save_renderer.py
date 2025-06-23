@@ -1,5 +1,6 @@
-import cv2
+import cv2, os
 import numpy as np
+from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 from typing import Dict, Any
 
@@ -101,11 +102,14 @@ class ImageSaveRenderer:
         watermark = Image.new('RGBA', (w, h), (0, 0, 0, 0))
         draw = ImageDraw.Draw(watermark)
 
+        src_folder = Path(__file__).parent.parent
+        font_path = os.path.join(src_folder, 'fonts/Arial-Unicode-Regular.ttf')
+
         # 使用指定的字体文件
-        font_size = 24  # 设置较大的字号
+        font_size = 24 if w < 1000 else w // 40  # 设置较大的字号
         try:
             # 使用项目中的anime_ace_3.ttf字体
-            font = ImageFont.truetype('fonts/Arial-Unicode-Regular.ttf', font_size)
+            font = ImageFont.truetype(font_path, font_size)
         except:
             # 如果找不到字体文件，使用默认字体
             font = ImageFont.load_default()
