@@ -91,6 +91,7 @@ class Settings:
         # self.settings_page.tools.translator = 'Deepseek'
         # self.settings_page.credentials.credentials['Deepseek_api_key'] = 'sk-91043ea797ae460680043f6964239dc1'
         print('comic_open_api_key', os.getenv('comic_open_api_key'))
+        self.settings_page.tools.use_gpu = self.gpu_enabled
         self.settings_page.tools.translator = 'Custom'
         self.settings_page.credentials.credentials['Custom_api_key'] = 'sk-eb7bza776ztE5ieH3e0aA56c7aB24bA38dFf734cB50f4d69'#'sk-jrKOlAUbyydnF6ve4e751a56Cb564eAd90A100671942Ae7c'#'sk-6rPJZBY5dUqPvwEaCf4353CaC9Ae465091Ac2a79510187Dc'
         self.settings_page.credentials.credentials['Custom_api_url'] = 'https://api.mixrai.com/v1'
@@ -138,7 +139,7 @@ def main():
     )
 
 
-def run(input_path, output_path, target_language, source_language='Japanese', logger=None):
+def run(input_path, output_path, target_language, source_language='Japanese', logger=None, add_watermark=False):
     image_files = []
 
     names = os.listdir(input_path)
@@ -167,7 +168,8 @@ def run(input_path, output_path, target_language, source_language='Japanese', lo
         image_states=image_states,
         settings=settings,
         output_path=output_path,
-        logger=logger
+        logger=logger,
+        add_watermark=add_watermark
     )
     print('----full process time----%s' % (time.time() - t1))
     return flag, msg
@@ -182,17 +184,17 @@ if __name__ == '__main__':
         output_path = '/Users/mac/Documents/manga/test2/output'
         source_language = 'English'
         target_language = 'Simplified Chinese'
-        run(input_path, output_path, target_language, source_language, logger=logger)
+        run(input_path, output_path, target_language, source_language, logger=logger, add_watermark=False)
     else:
         image_path = sys.argv[1]
         input_image = cv2.imread(image_path)
 
         # source_language = 'Traditional Chinese'
-        source_language = 'Japanese'
-        target_language = 'Hindi'  # 'Russian' # 'Korean' # 'Simplified Chinese' # 'Chinese' # 'English' #'Traditional Chinese' # 'Japanese'
+        source_language = 'English'
+        target_language = 'Simplified Chinese'  # 'Russian' # 'Korean' # 'Simplified Chinese' # 'Chinese' # 'English' #'Traditional Chinese' # 'Japanese'
         settings = Settings(source_language, target_language)
         processor = BatchProcessor()
-        # flag, output_image = processor.process_one_image(settings, input_image, 'Japanese', target_language)
+        # flag, output_image = processor.process_one_image(settings, input_image, source_language, target_language)
         t1 = time.time()
         # flag, covert_image = processor.run_render_block(settings, input_image, source_language, target_language)
         # output_image = covert_image
@@ -208,7 +210,11 @@ if __name__ == '__main__':
 
         import logging
         logger = logging.getLogger('test')
-        flag, output_image = processor.process_one_image(settings, input_image, source_language, target_language, logger=logger)
+        flag, output_image = processor.process_one_image(settings, input_image, source_language, target_language, logger=logger, add_watermark=True)
+
+        # flag, output_image = processor.run_render_block(settings, input_image, source_language, target_language)
+
+        # flag, output_image = processor.run_add_watermask(settings, input_image, source_language, target_language)
 
         if flag:
             cv2.imwrite('output.png', output_image)
