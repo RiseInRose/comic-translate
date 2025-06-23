@@ -92,7 +92,7 @@ class BatchProcessor:
     def deal_one_image(self, timestamp, index, total_images, error_msg_arr, image_path, output_path, archive_info,
                        image, blk_list, one_image_state, settings, need_save_path, need_save_image,
                        progress_callback: Callable[[int, int, int, int, bool, str], None] = None,
-                       cancel_check: Callable[[], bool] = None, logger=None):
+                       cancel_check: Callable[[], bool] = None, logger=None, add_watermark=False):
         source_lang = one_image_state['source_lang']
         print('source_lang', source_lang)
         # 用日文代替繁体中文，会有更好的识别效果
@@ -335,6 +335,8 @@ class BatchProcessor:
         cur_t = time.time()
         print('-------------Save rendered image------------')
         output_image = renderer.render_to_image()
+        if add_watermark:
+            output_image = renderer.add_watermark(output_image)
         if need_save_image:
             cv2.imwrite(sv_pth, output_image)
             return output_image, sv_pth
@@ -364,7 +366,7 @@ class BatchProcessor:
             print(ex)
         return image, save_path
 
-    def process_one_image(self, settings, image, source_lang, target_lang, logger=None):
+    def process_one_image(self, settings, image, source_lang, target_lang, logger=None, add_watermark=False):
         h, w, _ = image.shape
         # if h * w > 2400 * 3600:
         #     print('Image too large')
@@ -435,9 +437,12 @@ class BatchProcessor:
             else:
                 output_image, save_path = self.combine_one_image(result_im, clip_arrs,datetime.now().strftime("%b-%d-%Y_%I-%M-%S%p"), 1, 1, [], None, None,
                                                    None, image, blk_list, one_image_state, settings, False, False, None, None, logger)
+            if add_watermark:
+                output_image = ImageSaveRenderer.add_watermark(output_image)
+                
         else:
             output_image, save_path = self.deal_one_image(datetime.now().strftime("%b-%d-%Y_%I-%M-%S%p"), 1, 1, [], None, None, None,
-                                               image, blk_list, one_image_state, settings, False, False, None, None, logger)
+                                               image, blk_list, one_image_state, settings, False, False, None, None, logger, add_watermark)
 
         return True, output_image
 
@@ -448,7 +453,7 @@ class BatchProcessor:
                        output_path: str = None,
                        archive_info: List[Dict[str, Any]] = None,
                        progress_callback: Callable[[int, int, int, int, bool, str], None] = None,
-                       cancel_check: Callable[[], bool] = None, logger=None):
+                       cancel_check: Callable[[], bool] = None, logger=None, add_watermark=False):
         """
         批量处理图片
 
@@ -560,11 +565,13 @@ class BatchProcessor:
                                                   output_path,
                                                   archive_info, image, blk_list, one_image_state, settings, True, False,
                                                   None, cancel_check, logger)
+                if add_watermark:
+                    output_image = ImageSaveRenderer.add_watermark(output_image)
                 cv2.imwrite(save_path, output_image)
             else:
                 self.deal_one_image(timestamp, index, total_images, error_msg_arr, image_path, output_path,
                                                   archive_info, image, blk_list, one_image_state, settings, True, True,
-                                                  progress_callback, cancel_check, logger)
+                                                  progress_callback, cancel_check, logger, add_watermark)
 
         if len(error_msg_arr) > 0:
             return False, '\r\n'.join(error_msg_arr)
@@ -626,11 +633,14 @@ class BatchProcessor:
         # with open('blk.pkl', 'wb') as fw:
         #     pickle.dump(blk_list, fw)
         #
+        print('get mask')
         mask = generate_mask(image, blk_list)
         InpainterClass = inpaint_map[settings.inpainter_key]
         self.inpainter_cache = InpainterClass('cpu')
         self.cached_inpainter_key = settings.inpainter_key
+        print('inpainter_cache')
         inpaint_input_img = self.inpainter_cache(image, mask, settings.inpaint_config)
+        print('convertScaleAbs')
         inpaint_input_img = cv2.convertScaleAbs(inpaint_input_img)
         # with open('inpaint_input_img.pkl', 'wb') as f:
         #     pickle.dump(inpaint_input_img, f)
@@ -654,6 +664,7 @@ class BatchProcessor:
 
         # get_best_render_area(blk_list, image, inpaint_input_img)
 
+        print('render')
         for blk in blk_list:
             x1, y1, x2, y2 = blk.xyxy
             print(x1, x2, y1, y2)
@@ -661,7 +672,7 @@ class BatchProcessor:
             xy2 = (x2, y2)
             cv2.rectangle(im, xy1, xy2, (255,0,0), thickness=4, lineType=None, shift=None)
 
-        for blk in blk_list:
+        for index, blk in enumerate(blk_list):
             if blk.bubble_xyxy is not None:
                 x1, y1, x2, y2 = blk.bubble_xyxy
                 print(x1, x2, y1, y2)
@@ -669,15 +680,21 @@ class BatchProcessor:
                 xy2 = (x2, y2)
                 cv2.rectangle(im, xy1, xy2, (0,255,0), thickness=4, lineType=None, shift=None)
 
-                # cv2.putText(im, "test", (x1, y1 + 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 1)
+                cv2.putText(im, "test%s"%index, (x1, y1 + 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 1)
 
         for blk in blk_list:
+            if blk.inpaint_bboxes is None:
+                continue
+
             for x1, y1, x2, y2 in blk.inpaint_bboxes:
                 xy1 = (x1, y1)
                 xy2 = (x2, y2)
                 cv2.rectangle(im, xy1, xy2, (0, 255, 255), thickness=2, lineType=None, shift=None)
 
         for blk in blk_list:
+            if blk.inpaint_bboxes is None:
+                continue
+
             sumx = 0
             sumy = 0
             for x1, y1, x2, y2 in blk.inpaint_bboxes:
@@ -766,6 +783,11 @@ class BatchProcessor:
         print(clip_arrs)
 
         return True, np.array(result_im), clip_arrs
+
+    def run_add_watermask(self, settings, image, source_lang, target_lang):
+        result_image = ImageSaveRenderer.add_watermark(image)
+        
+        return True, result_image
 
 
 if __name__ == '__main__':
