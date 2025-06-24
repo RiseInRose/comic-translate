@@ -368,6 +368,9 @@ class BatchProcessor:
 
     def process_one_image(self, settings, image, source_lang, target_lang, logger=None, add_watermark=False):
         h, w, _ = image.shape
+        origin_h = h
+        origin_w = w
+        changed_size = False
         # if h * w > 2400 * 3600:
         #     print('Image too large')
         #     return False, 'Image too large'
@@ -377,7 +380,18 @@ class BatchProcessor:
 
         if h * w > 2400 * 1600 and w > 1600:
             percent = 1600.0 / w
-            image = cv2.resize(image, (int(w * percent), int(h * percent)))
+            w = 1600
+            h = int(h * percent)
+            image = cv2.resize(image, (w, h))
+            changed_size = True
+
+        # 宽度800以下文字擦除效果不好，放大到1200
+        if w < 800:
+            percent = 1200.0 / w
+            w = 1200
+            h = int(percent * h)
+            image = cv2.resize(image, (w, h))
+            changed_size = True
 
         min_font_size, max_font_size = self.get_min_and_max_font_size(w)
 
@@ -399,7 +413,7 @@ class BatchProcessor:
         cur_t = time.time()
         print(time.time() - cur_t)
         print('------------------blk_list------------------')
-        print(blk_list)
+        print('length blk_list ', len(blk_list))
 
         one_image_state = {
             'source_lang': source_lang,
@@ -443,6 +457,9 @@ class BatchProcessor:
         else:
             output_image, save_path = self.deal_one_image(datetime.now().strftime("%b-%d-%Y_%I-%M-%S%p"), 1, 1, [], None, None, None,
                                                image, blk_list, one_image_state, settings, False, False, None, None, logger, add_watermark)
+
+        # if changed_size:
+        #     output_image = cv2.resize(output_image, (origin_w, origin_h), interpolation=cv2.INTER_AREA)
 
         return True, output_image
 
@@ -502,6 +519,13 @@ class BatchProcessor:
                 h = int(percent * h)
                 image = cv2.resize(image, (w, h))
 
+            # 宽度800以下文字擦除效果不好，放大到1200
+            if w < 800:
+                percent = 1200.0 / w
+                w = 1200
+                h = int(percent * h)
+                image = cv2.resize(image, (w, h))
+
             min_font_size, max_font_size = self.get_min_and_max_font_size(w)
 
             settings.render_settings.max_font_size = max_font_size
@@ -527,7 +551,7 @@ class BatchProcessor:
             print('------------------blk_list------------------')
             print(time.time()-cur_t)
             cur_t = time.time()
-            print(blk_list)
+            print('length blk_list ', len(blk_list))
 
             # 判断是否是长图
             if h > w * 2.1:
@@ -664,7 +688,7 @@ class BatchProcessor:
 
         # get_best_render_area(blk_list, image, inpaint_input_img)
 
-        print('render')
+        # print('render')
         for blk in blk_list:
             x1, y1, x2, y2 = blk.xyxy
             print(x1, x2, y1, y2)
@@ -672,6 +696,15 @@ class BatchProcessor:
             xy2 = (x2, y2)
             cv2.rectangle(im, xy1, xy2, (255,0,0), thickness=4, lineType=None, shift=None)
 
+            mx = int(blk.center[0])
+            my = int(blk.center[1])
+            x1, x2 = mx - 10, mx + 10
+            y1, y2 = my - 10, my + 10
+            xy1 = (x1, y1)
+            xy2 = (x2, y2)
+            cv2.rectangle(im, xy1, xy2, (0, 0, 255), thickness=4, lineType=None, shift=None)
+
+        #
         for index, blk in enumerate(blk_list):
             if blk.bubble_xyxy is not None:
                 x1, y1, x2, y2 = blk.bubble_xyxy
@@ -681,33 +714,35 @@ class BatchProcessor:
                 cv2.rectangle(im, xy1, xy2, (0,255,0), thickness=4, lineType=None, shift=None)
 
                 cv2.putText(im, "test%s"%index, (x1, y1 + 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 1)
+        #
+        # for blk in blk_list:
+        #     if blk.inpaint_bboxes is None:
+        #         continue
+        #
+        #     for x1, y1, x2, y2 in blk.inpaint_bboxes:
+        #         xy1 = (x1, y1)
+        #         xy2 = (x2, y2)
+        #         cv2.rectangle(im, xy1, xy2, (0, 255, 255), thickness=2, lineType=None, shift=None)
+        #
+        # for blk in blk_list:
+        #     if blk.inpaint_bboxes is None:
+        #         continue
+        #
+        #     sumx = 0
+        #     sumy = 0
+        #     for x1, y1, x2, y2 in blk.inpaint_bboxes:
+        #         sumx += (x1+x2)/2
+        #         sumy += (y1+y2)/2
+        #     mx = int(sumx / len(blk.inpaint_bboxes))
+        #     my = int(sumy / len(blk.inpaint_bboxes))
+        #
+        #     x1, x2 = mx - 10, mx + 10
+        #     y1, y2 = my - 10, my + 10
+        #     xy1 = (x1, y1)
+        #     xy2 = (x2, y2)
+        #     cv2.rectangle(im, xy1, xy2, (0, 0, 255), thickness=4, lineType=None, shift=None)
 
-        for blk in blk_list:
-            if blk.inpaint_bboxes is None:
-                continue
-
-            for x1, y1, x2, y2 in blk.inpaint_bboxes:
-                xy1 = (x1, y1)
-                xy2 = (x2, y2)
-                cv2.rectangle(im, xy1, xy2, (0, 255, 255), thickness=2, lineType=None, shift=None)
-
-        for blk in blk_list:
-            if blk.inpaint_bboxes is None:
-                continue
-
-            sumx = 0
-            sumy = 0
-            for x1, y1, x2, y2 in blk.inpaint_bboxes:
-                sumx += (x1+x2)/2
-                sumy += (y1+y2)/2
-            mx = int(sumx / len(blk.inpaint_bboxes))
-            my = int(sumy / len(blk.inpaint_bboxes))
-
-            x1, x2 = mx - 10, mx + 10
-            y1, y2 = my - 10, my + 10
-            xy1 = (x1, y1)
-            xy2 = (x2, y2)
-            cv2.rectangle(im, xy1, xy2, (0, 0, 255), thickness=4, lineType=None, shift=None)
+        # cv2.resize(im, (w, h))
 
         return True, im
 

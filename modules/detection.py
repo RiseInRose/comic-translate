@@ -48,17 +48,37 @@ class TextBlockDetector:
         raw_results = []
         text_matched = [False] * len(text_bounding_boxes)
 
+        bubble_box_to_raw_index = {}
+
         if text_bounding_boxes is not None or len(text_bounding_boxes) > 0:
             for txt_idx, txt_box in enumerate(text_bounding_boxes):
                 for bble_box in bubble_bounding_boxes:
 
                     if does_rectangle_fit(bble_box, txt_box):
+                        if tuple(bble_box) in bubble_box_to_raw_index:
+                            raw = raw_results[bubble_box_to_raw_index[tuple(bble_box)]]
+                            list_raw = list(raw)
+                            list_raw[2].extend(text_blocks_bboxes[txt_idx])
+                            list_raw[0] = merge_boxes(list_raw[0], txt_box)
+                            raw_results[bubble_box_to_raw_index[tuple(bble_box)]] = tuple(list_raw)
+                            text_matched[txt_idx] = True
+                            continue
                         raw_results.append((txt_box, bble_box, text_blocks_bboxes[txt_idx], 'text_bubble'))
                         text_matched[txt_idx] = True
+                        bubble_box_to_raw_index[tuple(bble_box)] = len(raw_results) - 1
                         break
                     elif do_rectangles_overlap(bble_box, txt_box):
+                        if tuple(bble_box) in bubble_box_to_raw_index:
+                            raw = raw_results[bubble_box_to_raw_index[tuple(bble_box)]]
+                            list_raw = list(raw)
+                            list_raw[2].extend(text_blocks_bboxes[txt_idx])
+                            list_raw[0] = merge_boxes(list_raw[0], txt_box)
+                            raw_results[bubble_box_to_raw_index[tuple(bble_box)]] = tuple(list_raw)
+                            text_matched[txt_idx] = True
+                            continue
                         raw_results.append((txt_box, bble_box, text_blocks_bboxes[txt_idx], 'text_free'))
                         text_matched[txt_idx] = True
+                        bubble_box_to_raw_index[tuple(bble_box)] = len(raw_results) - 1
                         break
 
                 if not text_matched[txt_idx]:

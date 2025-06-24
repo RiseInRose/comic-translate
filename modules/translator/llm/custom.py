@@ -69,7 +69,7 @@ class CustomTranslation(BaseLLMTranslation):
                 response = requests.request("POST", f"{api_url}/chat/completions", headers=headers, data=payload)
 
                 data = response.json()
-                print(data)
+                # print(data)
                 s = data.get('choices', [])[0].get('message').get('content')
                 return s
             except Exception as ex:
