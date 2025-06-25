@@ -306,6 +306,11 @@ class TextWrapper:
 
                 # Nope, this line is full.
                 else:
+                    if chunks[-1] == '...':
+                        cur_line.append(chunks.pop())
+                        cur_len += l
+                        continue
+
                     break
 
             # The current line is full, and the next chunk is too big to

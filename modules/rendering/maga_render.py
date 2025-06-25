@@ -71,6 +71,8 @@ def pyside_word_wrap(text: str, font_pth: str, roi_width: int, roi_height: int,
 
         return width, height
 
+    text = text.replace('．', '.').replace('. ', '.').replace('...', ' ... ').strip()
+
     mutable_message = text
     font_size = init_font_size
     block_area = roi_width * roi_height
@@ -83,7 +85,7 @@ def pyside_word_wrap(text: str, font_pth: str, roi_width: int, roi_height: int,
             font_size = min_font_size
 
     mutable_message = '\n'.join(
-        hyphen_wrap(text, 1, break_on_hyphens=break_long_words, break_long_words=break_long_words, hyphenate_broken_words=True))
+        hyphen_wrap(text, 1, break_on_hyphens=True, break_long_words=break_long_words, hyphenate_broken_words=True))
     wrapped_width, _ = eval_metrics(mutable_message, font_size)
     area_ratio = wrapped_width * 1.0 / roi_width
     if area_ratio > 1:
@@ -105,7 +107,7 @@ def pyside_word_wrap(text: str, font_pth: str, roi_width: int, roi_height: int,
                     columns -= 1
                 if columns == 0:
                     break
-                mutable_message = '\n'.join(hyphen_wrap(text, columns, break_on_hyphens=break_long_words, break_long_words=break_long_words, hyphenate_broken_words=True))
+                mutable_message = '\n'.join(hyphen_wrap(text, columns, break_on_hyphens=True, break_long_words=break_long_words, hyphenate_broken_words=True))
                 wrapped_width, _ = eval_metrics(mutable_message, font_size)
                 if wrapped_width <= roi_width:
                     break
@@ -124,7 +126,7 @@ def pyside_word_wrap(text: str, font_pth: str, roi_width: int, roi_height: int,
         min_cost = 1e9
         min_text = text
         for columns in range(1, len(text)):
-            wrapped_text = '\n'.join(hyphen_wrap(text, columns, break_on_hyphens=break_long_words, break_long_words=break_long_words, hyphenate_broken_words=True))
+            wrapped_text = '\n'.join(hyphen_wrap(text, columns, break_on_hyphens=True, break_long_words=break_long_words, hyphenate_broken_words=True))
             wrapped_width, wrapped_height = eval_metrics(wrapped_text, font_size)
             cost = (wrapped_width - roi_width)**2 + (wrapped_height - roi_height)**2
             if cost < min_cost:
@@ -202,6 +204,3 @@ def get_best_render_area(blk_list: List[TextBlock], img, inpainted_img):
 
     return blk_list
 
-
-
-        
