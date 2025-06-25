@@ -388,10 +388,12 @@ class BatchProcessor:
         # 宽度800以下文字擦除效果不好，放大到1200
         if w < 800:
             percent = 1200.0 / w
-            w = 1200
-            h = int(percent * h)
-            image = cv2.resize(image, (w, h))
-            changed_size = True
+            # 长图缩放容易造成内存不够，所以限制一下
+            if h * percent < 6000:
+                w = 1200
+                h = int(percent * h)
+                image = cv2.resize(image, (w, h))
+                changed_size = True
 
         min_font_size, max_font_size = self.get_min_and_max_font_size(w)
 
@@ -522,9 +524,11 @@ class BatchProcessor:
             # 宽度800以下文字擦除效果不好，放大到1200
             if w < 800:
                 percent = 1200.0 / w
-                w = 1200
-                h = int(percent * h)
-                image = cv2.resize(image, (w, h))
+                # 长图缩放容易造成内存不够，所以限制一下    
+                if h * percent < 6000:
+                    w = 1200
+                    h = int(percent * h)
+                    image = cv2.resize(image, (w, h))
 
             min_font_size, max_font_size = self.get_min_and_max_font_size(w)
 
