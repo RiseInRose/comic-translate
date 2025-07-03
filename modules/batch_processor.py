@@ -81,9 +81,10 @@ class BatchProcessor:
             self.block_detector_cache = TextBlockDetector(
                 os.path.join(folder, 'models/detection/comic-speech-bubble-detector.pt'),
                 os.path.join(folder, 'models/detection/comic-text-segmenter.pt'),
-                # os.path.join(folder, 'models/detection/manga-text-detector.pt'),
-                os.path.join(folder, 'models/detection/ysgyolo_S150best.pt'), # 识别块更多
-                device
+                os.path.join(folder, 'models/detection/manga-text-detector.pt'),
+                # os.path.join(folder, 'models/detection/ysgyolo_S150best.pt'), # 识别块更多
+                device,
+                text_detect_model_path_2=os.path.join(folder, 'models/detection/ysgyolo_S150best.pt')
             )
 
         blk_list = self.block_detector_cache.detect(image)
@@ -656,6 +657,11 @@ class BatchProcessor:
         import pickle
 
         blk_list = self.get_blk_list(settings, image)
+
+        self.ocr.initialize(settings, source_lang)
+        self.ocr.process(image, blk_list)
+        for index, blk in enumerate(blk_list):
+            print(index, blk.text)
 
         #
         # with open('blk.pkl', 'wb') as fw:
