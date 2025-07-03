@@ -6,10 +6,14 @@ import cv2
 
 
 class TextBlockDetector:
-    def __init__(self, bubble_model_path: str, text_seg_model_path: str, text_detect_model_path: str, device: str):
+    def __init__(self, bubble_model_path: str, text_seg_model_path: str, text_detect_model_path: str, device: str, text_detect_model_path_2: str = None):
         self.bubble_detection = YOLO(bubble_model_path)
         self.text_segmentation = YOLO(text_seg_model_path)
         self.text_detection = YOLO(text_detect_model_path)
+        if text_detect_model_path_2:
+            self.text_detection_2 = YOLO(text_detect_model_path_2)
+        else:
+            self.text_detection_2 = None
         self.device = device
 
     def detect(self, img):
@@ -21,7 +25,11 @@ class TextBlockDetector:
 
         bble_detec_result = self.bubble_detection(img, device=self.device, imgsz=size, conf=0.1, verbose=False)[0]
         txt_seg_result = self.text_segmentation(img, device=self.device, imgsz=size, conf=0.1, verbose=False)[0]
-        txt_detect_result = self.text_detection(img, device=self.device, imgsz=det_size, conf=0.2, verbose=False)[0]
+        txt_detect_result = self.text_detection(img, device=self.device, imgsz=det_size, conf=0.1, verbose=False)[0]
+        if self.text_detection_2:
+            txt_detect_result_2 = self.text_detection_2(img, device=self.device, imgsz=det_size, conf=0.1, verbose=False)[0]
+            # 合并txt_detect_result_2和txt_detect_result
+            txt_detect_result = self.merge_results(txt_detect_result, txt_detect_result_2)
 
         combined = self.combine_results(bble_detec_result, txt_seg_result, txt_detect_result)
 
@@ -29,6 +37,57 @@ class TextBlockDetector:
                 for txt_bbox, bble_bbox, inp_bboxes, txt_class in combined]
         
         return blk_list
+    
+    def merge_results(self, result1, result2):
+        """
+        合并两个YOLO检测结果
+        
+        Args:
+            result1: 第一个YOLO检测结果
+            result2: 第二个YOLO检测结果
+            
+        Returns:
+            合并后的YOLO检测结果
+        """
+        import torch
+        
+        # 如果其中一个结果为空，直接返回另一个
+        if result1 is None:
+            return result2
+        if result2 is None:
+            return result1
+            
+        # 检查是否有检测到的框
+        if len(result1.boxes) == 0:
+            return result2
+        if len(result2.boxes) == 0:
+            return result1
+        
+        # 提取边界框、置信度和类别信息
+        boxes1 = result1.boxes.xyxy  # 边界框坐标
+        conf1 = result1.boxes.conf   # 置信度
+        cls1 = result1.boxes.cls     # 类别
+        
+        boxes2 = result2.boxes.xyxy
+        conf2 = result2.boxes.conf
+        cls2 = result2.boxes.cls
+        
+        # 合并数据
+        merged_boxes = torch.cat([boxes1, boxes2], dim=0)
+        merged_conf = torch.cat([conf1, conf2], dim=0)
+        merged_cls = torch.cat([cls1, cls2], dim=0)
+        
+        # 创建新的data张量 [xyxy, conf, cls]
+        merged_data = torch.cat([
+            merged_boxes, 
+            merged_conf.unsqueeze(1), 
+            merged_cls.unsqueeze(1)
+        ], dim=1)
+        
+        # 直接修改底层数据
+        result1.boxes.data = merged_data
+        
+        return result1
     
     def combine_results(self, bubble_detec_results: YOLO, text_seg_results: YOLO, text_detect_results: YOLO):
         bubble_bounding_boxes = np.array(bubble_detec_results.boxes.xyxy.cpu(), dtype="int")
