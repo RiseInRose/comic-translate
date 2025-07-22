@@ -58,7 +58,8 @@ class OCREngineFactory:
             'Simplified Chinese': cls._create_paddle_ocr,
             'Traditional Chinese': cls._create_paddle_ocr,
             # 'Russian': lambda s: cls._create_gpt_ocr(s,  MODEL_MAP.get('GPT-4o')),
-            'Russian': lambda s: cls._create_custom_ocr(s,  MODEL_MAP.get('GPT-4o mini'))
+            'Russian': lambda s: cls._create_custom_ocr(s,  MODEL_MAP.get('GPT-4o mini')),
+            'English': lambda s: cls._create_paddle_ocr_with_lang(s, 'en')
             # 'Russian': lambda s: cls._create_paddle_ocr_with_lang(s, 'ru')
         }
         
@@ -129,9 +130,13 @@ class OCREngineFactory:
         dic = {
             'lang': lang,
             'use_gpu': settings.is_gpu_enabled(),
-            # 'use_angle_cls': True,
-            'rec_model_dir': './models/ru_rec',
-            'det_model_dir': './models/ru_det'
+            #'use_angle_cls': True,
+            #'rec_model_dir': './models/ru_rec',
+            #'det_model_dir': './models/ru_det'
+            'det_model_dir': "./models/PP-OCRv5_server_det",
+            'rec_model_dir': "./models/PP-OCRv5_server_rec",
+            'cls_model_dir': "./models/PP-LCNet_x1_0_doc_ori",
+            'use_angle_cls': True,
         }
         engine = PaddleOCREngine()
         engine.initialize(**dic)
