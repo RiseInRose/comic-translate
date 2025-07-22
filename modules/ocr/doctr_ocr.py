@@ -29,8 +29,8 @@ class DocTROCREngine(OCREngine):
         # Initialize model if not already loaded
         if self.model is None:
             self.model = ocr_predictor(
-                det_arch='db_resnet34', 
-                reco_arch='parseq', 
+                det_arch='db_resnet50',  # db_resnet34
+                reco_arch='parseq',
                 pretrained=True,
             )
 

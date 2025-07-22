@@ -81,9 +81,10 @@ class BatchProcessor:
             self.block_detector_cache = TextBlockDetector(
                 os.path.join(folder, 'models/detection/comic-speech-bubble-detector.pt'),
                 os.path.join(folder, 'models/detection/comic-text-segmenter.pt'),
-                # os.path.join(folder, 'models/detection/manga-text-detector.pt'),
-                os.path.join(folder, 'models/detection/ysgyolo_S150best.pt'), # 识别块更多
-                device
+                os.path.join(folder, 'models/detection/manga-text-detector.pt'),
+                # os.path.join(folder, 'models/detection/ysgyolo_S150best.pt'), # 识别块更多
+                device,
+                text_detect_model_path_2=os.path.join(folder, 'models/detection/ysgyolo_S150best.pt')
             )
 
         blk_list = self.block_detector_cache.detect(image)
@@ -138,7 +139,7 @@ class BatchProcessor:
         if progress_callback:
             progress_callback(index, total_images, 2, 10, False, "")
         if cancel_check and cancel_check():
-            return
+            return None, ''
 
         # OCR Processing
         if blk_list:
@@ -177,7 +178,7 @@ class BatchProcessor:
                     progress_callback(index, total_images, 2, 10, False, f"OCR Error: {error_msg}")
                 self.log_skipped_image(directory, timestamp, image_path)
                 error_msg_arr.append(base_name + f" OCR Error: {error_msg}")
-                return
+                return None, ''
         else:
             print('------------------skip_save------------------')
             self.skip_save(directory, timestamp, base_name, extension, archive_bname, image)
@@ -185,12 +186,12 @@ class BatchProcessor:
                 progress_callback(index, total_images, 2, 10, False, "No text blocks detected")
             self.log_skipped_image(directory, timestamp, image_path)
             error_msg_arr.append(base_name + " No text blocks detected")
-            return
+            return None, ''
 
         if progress_callback:
             progress_callback(index, total_images, 3, 10, False, "")
         if cancel_check and cancel_check():
-            return
+            return None, ''
 
         # Inpainting
         if self.inpainter_cache is None or self.cached_inpainter_key != settings.inpainter_key:
@@ -218,7 +219,7 @@ class BatchProcessor:
         if progress_callback:
             progress_callback(index, total_images, 4, 10, False, "")
         if cancel_check and cancel_check():
-            return
+            return None, ''
 
         # Save cleaned image if needed
         if settings.export_inpainted_image:
@@ -231,7 +232,7 @@ class BatchProcessor:
         if progress_callback:
             progress_callback(index, total_images, 5, 10, False, "")
         if cancel_check and cancel_check():
-            return
+            return None, ''
 
         print(time.time() - cur_t)
         cur_t = time.time()
@@ -247,7 +248,7 @@ class BatchProcessor:
                 progress_callback(index, total_images, 5, 10, False, f"Translation Error: {error_msg}")
             self.log_skipped_image(directory, timestamp, image_path)
             error_msg_arr.append(base_name + f" Translation Error: {error_msg}")
-            return
+            return None, ''
 
         print(time.time() - cur_t)
         cur_t = time.time()
@@ -266,7 +267,7 @@ class BatchProcessor:
                     progress_callback(index, total_images, 5, 10, False, "Empty translation result")
                 self.log_skipped_image(directory, timestamp, image_path)
                 error_msg_arr.append(base_name + " Empty translation result")
-                return
+                return None, ''
         except json.JSONDecodeError as e:
             error_msg = str(e)
             self.skip_save(directory, timestamp, base_name, extension, archive_bname, image)
@@ -274,7 +275,7 @@ class BatchProcessor:
                 progress_callback(index, total_images, 5, 10, False, f"Invalid translation format: {error_msg}")
             self.log_skipped_image(directory, timestamp, image_path)
             error_msg_arr.append(base_name + f" Invalid translation format: {error_msg}")
-            return
+            return None, ''
 
         # Save text files if needed
         if settings.export_raw_text:
@@ -294,7 +295,7 @@ class BatchProcessor:
         if progress_callback:
             progress_callback(index, total_images, 7, 10, False, "")
         if cancel_check and cancel_check():
-            return
+            return None, ''
 
         print(time.time() - cur_t)
         cur_t = time.time()
@@ -597,14 +598,19 @@ class BatchProcessor:
                     output_image = ImageSaveRenderer.add_watermark(output_image)
                 cv2.imwrite(save_path, output_image)
             else:
-                self.deal_one_image(timestamp, index, total_images, error_msg_arr, image_path, output_path,
+                output_image, save_path = self.deal_one_image(timestamp, index, total_images, error_msg_arr, image_path, output_path,
                                                   archive_info, image, blk_list, one_image_state, settings, True, True,
                                                   progress_callback, cancel_check, logger, add_watermark)
 
-        if len(error_msg_arr) > 0:
-            return False, '\r\n'.join(error_msg_arr)
-        else:
-            return True, ''
+                if output_image is None:
+                    output_path_file_path = os.path.join(output_path, os.path.basename(image_path))
+                    shutil.copyfile(image_path, output_path_file_path)
+
+        return True, ''
+        # if len(error_msg_arr) > 0:
+        #     return False, '\r\n'.join(error_msg_arr)
+        # else:
+        #     return True, ''
 
     def get_y_ranges(self, blk_list, h, offset_ratio=0.1):
         arr = []
@@ -656,6 +662,11 @@ class BatchProcessor:
         import pickle
 
         blk_list = self.get_blk_list(settings, image)
+
+        self.ocr.initialize(settings, source_lang)
+        self.ocr.process(image, blk_list)
+        for index, blk in enumerate(blk_list):
+            print(index, blk.text)
 
         #
         # with open('blk.pkl', 'wb') as fw:
