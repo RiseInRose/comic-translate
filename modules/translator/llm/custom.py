@@ -66,7 +66,8 @@ class CustomTranslation(BaseLLMTranslation):
         i = 0
         while i < 3:
             try:
-                response = requests.request("POST", f"{api_url}/chat/completions", headers=headers, data=payload)
+                response = requests.request("POST", f"{api_url}/chat/completions", headers=headers, data=payload,
+                                            timeout=10)
 
                 data = response.json()
                 # print(data)
@@ -76,6 +77,7 @@ class CustomTranslation(BaseLLMTranslation):
                 error_arr.append('-------trans fail------%s' % str(ex))
                 print('-------trans fail-------')
                 print(ex)
+                return None
                 # # 直连openai备用key
                 # api_url = self.openai_api_url
                 # headers["Authorization"] = f"Bearer {self.openai_api_key}"
