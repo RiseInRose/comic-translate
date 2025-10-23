@@ -1,4 +1,4 @@
-import json, requests
+import json, requests, secrets
 import time
 from typing import Any
 import numpy as np
@@ -91,7 +91,9 @@ class BaseLLMTranslation(LLMTranslation):
                     'payload': payload,
                 }
                 print(data)
-                resp = requests.post('https://www.mangatranslate.com/api/v1/manga/googletranslate', data=data)
+                csrf_token = secrets.token_hex(16)
+                resp = requests.post('https://www.mangatranslate.com/api/v1/manga/googletranslate', data=data,
+                     cookies={"csrftoken": csrf_token}, headers={"X-CSRF-Token": csrf_token})
                 # resp = requests.post('http://127.0.0.1:8002/api/v1/manga/googletranslate', data=data)
                 google_trans_result = resp.json()
                 if google_trans_result.get('result') == 'success':
