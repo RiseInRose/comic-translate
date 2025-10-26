@@ -139,10 +139,11 @@ class BaseLLMTranslation(LLMTranslation):
             #     entire_translated_text = self._perform_translation(user_prompt, system_prompt, image)
             #     set_texts_from_json(blk_list, entire_translated_text)
         
-        except Exception as e:
+        except Exception as ex:
             if self.logger is not None:
-                self.logger.error(f"{type(self).__name__} 翻译异常失败: {str(ex)}")
-            print(f"{type(self).__name__} all translation error: {str(e)}")
+                self.logger.warning(f"{type(self).__name__} 翻译异常失败: {str(ex)}")
+            print(f"{type(self).__name__} all translation error: {str(ex)}")
+            raise ex
             
         return blk_list
     
