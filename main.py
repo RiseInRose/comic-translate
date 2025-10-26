@@ -138,21 +138,13 @@ def main():
         settings=settings
     )
 
-
-def run(input_path, output_path, target_language, source_language='Japanese', logger=None, add_watermark=False):
-    image_files = []
-
-    names = os.listdir(input_path)
-    for name in names:
-        full_image_name = os.path.join(input_path, name)
-        image_files.append(full_image_name)
-
+def run_image_files(full_image_filenames, output_path, target_language, source_language='Japanese', logger=None, add_watermark=False):
     # 构造基本设置
     settings = Settings(source_language, target_language)
 
     # 构造图片状态信息
     image_states = {}
-    for image_path in image_files:
+    for image_path in full_image_filenames:
         image_states[image_path] = {
             'source_lang': source_language,  # 默认源语言
             'target_lang': target_language,  # 目标语言
@@ -164,7 +156,7 @@ def run(input_path, output_path, target_language, source_language='Japanese', lo
     # 初始化处理器并处理图片
     processor = BatchProcessor()
     flag, msg = processor.process_images(
-        image_files=image_files,
+        image_files=full_image_filenames,
         image_states=image_states,
         settings=settings,
         output_path=output_path,
@@ -173,6 +165,18 @@ def run(input_path, output_path, target_language, source_language='Japanese', lo
     )
     print('----full process time----%s' % (time.time() - t1))
     return flag, msg
+
+def run(input_path, output_path, target_language, source_language='Japanese', logger=None, add_watermark=False):
+    image_files = []
+
+    names = os.listdir(input_path)
+    for name in names:
+        full_image_name = os.path.join(input_path, name)
+        image_files.append(full_image_name)
+
+    return run_image_files(image_files, output_path, target_language, source_language=source_language, logger=logger,
+                           add_watermark=add_watermark)
+
 
 if __name__ == '__main__':
     # main()
