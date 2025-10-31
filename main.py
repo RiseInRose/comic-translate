@@ -27,7 +27,7 @@ class RenderSettings:
 
 @dataclass
 class Settings:
-    gpu_enabled: bool = True
+    gpu_enabled: bool = False
     lang_mapping: Dict[str, str] = None
     inpainter_key: str = 'LaMa'  # LaMa、MI-GAN 、AOT
     inpaint_config: Config = None
@@ -85,8 +85,8 @@ class Settings:
         elif target_language in {'English', 'French', 'German', 'Spanish', 'Italian', 'Dutch', 'Portuguese',
                                  'Brazilian Portuguese'}:
             self.render_settings.font_family = os.path.join(src_folder, 'fonts/anime_ace_3.ttf')
-        elif target_language in {'Mongolian'}:
-            self.render_settings.font_family = os.path.join(src_folder, 'fonts/NotoSansMongolian-Regular.ttf')
+        # elif target_language in {'Mongolian'}:
+        #     self.render_settings.font_family = os.path.join(src_folder, 'fonts/NotoSansMongolian-Regular.ttf')
         else:
             self.render_settings.font_family = os.path.join(src_folder, 'fonts/Arial-Unicode-Regular.ttf')
         print('font file:', self.render_settings.font_family)
