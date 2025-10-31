@@ -65,6 +65,7 @@ class Settings:
                 self.settings_page.tr("Finnish"): "Finnish",
                 self.settings_page.tr("Arabic"): "Arabic",
                 self.settings_page.tr("Hindi"): "Hindi",
+                self.settings_page.tr("Mongolian"): "Mongolian",
             }
         if self.inpaint_config is None:
             self.inpaint_config = Config()

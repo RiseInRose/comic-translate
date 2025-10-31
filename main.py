@@ -65,6 +65,7 @@ class Settings:
                 self.settings_page.tr("Finnish"): "Finnish",
                 self.settings_page.tr("Arabic"): "Arabic",
                 self.settings_page.tr("Hindi"): "Hindi",
+                self.settings_page.tr("Mongolian"): "Mongolian",
             }
         if self.inpaint_config is None:
             self.inpaint_config = Config()
@@ -93,7 +94,7 @@ class Settings:
         print('comic_open_api_key', os.getenv('comic_open_api_key'))
         self.settings_page.tools.use_gpu = self.gpu_enabled
         self.settings_page.tools.translator = 'Custom'
-        self.settings_page.credentials.credentials['Custom_api_key'] = 'sk-dSCZdTI6v0JwuCZQ0c06459b35Fb4aEc895800Dd13241a90' #'sk-eb7bza776ztE5ieH3e0aA56c7aB24bA38dFf734cB50f4d69'#'sk-jrKOlAUbyydnF6ve4e751a56Cb564eAd90A100671942Ae7c'#'sk-6rPJZBY5dUqPvwEaCf4353CaC9Ae465091Ac2a79510187Dc'
+        self.settings_page.credentials.credentials['Custom_api_key'] = '' #'sk-eb7bza776ztE5ieH3e0aA56c7aB24bA38dFf734cB50f4d69'#'sk-jrKOlAUbyydnF6ve4e751a56Cb564eAd90A100671942Ae7c'#'sk-6rPJZBY5dUqPvwEaCf4353CaC9Ae465091Ac2a79510187Dc'
         self.settings_page.credentials.credentials['Custom_api_url'] = 'https://api.mixrai.com/v1'
         self.settings_page.credentials.credentials['Custom_model'] = 'gpt-4o-mini'
         self.settings_page.credentials.credentials['Custom_openai_api_key'] = os.getenv('comic_open_api_key')
@@ -195,8 +196,8 @@ if __name__ == '__main__':
 
         # img_issure24_src.jpeg
         # source_language = 'Traditional Chinese'
-        source_language = 'English'
-        target_language = 'Simplified Chinese'  # 'Russian' # 'Korean' # 'Simplified Chinese' # 'Chinese' # 'English' #'Traditional Chinese' # 'Japanese'
+        source_language = 'Japanese'
+        target_language = 'Mongolian'  # 'Russian' # 'Korean' # 'Simplified Chinese' # 'Chinese' # 'English' #'Traditional Chinese' # 'Japanese'
         settings = Settings(source_language, target_language)
         processor = BatchProcessor()
         # flag, output_image = processor.process_one_image(settings, input_image, source_language, target_language)
@@ -213,11 +214,11 @@ if __name__ == '__main__':
         #     input_image[sy1+3:sy2-3,:,:] = output_image[y1+3:y2-3,:,:]
         # output_image = input_image
 
-        # import logging
-        # logger = logging.getLogger('test')
-        # flag, output_image = processor.process_one_image(settings, input_image, source_language, target_language, logger=logger, add_watermark=True)
+        import logging
+        logger = logging.getLogger('test')
+        flag, output_image = processor.process_one_image(settings, input_image, source_language, target_language, logger=logger, add_watermark=True)
 
-        flag, output_image = processor.run_render_block(settings, input_image, source_language, target_language)
+        # flag, output_image = processor.run_render_block(settings, input_image, source_language, target_language)
 
         # flag, output_image = processor.run_add_watermask(settings, input_image, source_language, target_language)
 

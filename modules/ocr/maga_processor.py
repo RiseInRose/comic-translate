@@ -29,6 +29,7 @@ language_codes = {
     "Hungarian": "hu",
     "Finnish": "fi",
     "Arabic": "ar",
+    "Mongolian": "mn"
     }
 
 class OCRProcessor:

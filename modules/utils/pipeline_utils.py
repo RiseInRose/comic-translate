@@ -36,6 +36,7 @@ language_codes = {
     "Hungarian": "hu",
     "Finnish": "fi",
     "Arabic": "ar",
+    "Mongolian": "mn"
     }
 
 def get_layout_direction(language: str) -> Qt.LayoutDirection:
