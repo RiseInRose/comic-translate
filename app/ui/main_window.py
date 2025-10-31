@@ -42,7 +42,7 @@ supported_target_languages = [
 "Traditional Chinese", "Russian", "German", "Dutch", "Spanish", 
 "Italian", "Turkish", "Polish", "Portuguese", "Brazilian Portuguese",
 "Thai", "Vietnamese", "Hungarian", "Indonesian",  "Finnish",
-"Arabic"]
+"Arabic", "Mongolian"]
 
 
 class ComicTranslateUI(QtWidgets.QMainWindow):

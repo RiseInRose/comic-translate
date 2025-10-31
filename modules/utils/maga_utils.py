@@ -36,6 +36,7 @@ language_codes = {
     "Arabic": "ar",
     "Czech": "cs",
     "Filipino": "fil",
+    "Mongolian": "mn"
     }
 
 inpaint_map = {
