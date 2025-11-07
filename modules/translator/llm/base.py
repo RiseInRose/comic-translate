@@ -8,7 +8,7 @@ from ..base import LLMTranslation
 from ...utils.maga_utils import language_codes
 from ...utils.textblock import TextBlock
 from ...utils.translator_utils import get_raw_text, set_texts_from_json
-
+from openai import OpenAI
 
 class BaseLLMTranslation(LLMTranslation):
     """Base class for LLM-based translation engines with shared functionality."""
@@ -53,22 +53,22 @@ class BaseLLMTranslation(LLMTranslation):
         """
 
         try:
+            entire_raw_text = get_raw_text(blk_list)
+            system_prompt = self.get_system_prompt(self.source_lang, self.target_lang)
+            user_prompt = f"{extra_context}\nMake the translation sound as natural as possible.\nTranslate this:\n{entire_raw_text}"
+
             vip = True
-            need_google_trans = True
+            need_other_trans = True
             if vip:
                 print('vip trans')
                 t1 = time.time()
-                entire_raw_text = get_raw_text(blk_list)
-                system_prompt = self.get_system_prompt(self.source_lang, self.target_lang)
-                user_prompt = f"{extra_context}\nMake the translation sound as natural as possible.\nTranslate this:\n{entire_raw_text}"
-
                 entire_translated_text = self._perform_translation(user_prompt, system_prompt, image)
                 try:
                     if entire_translated_text is not None:
                         set_texts_from_json(blk_list, entire_translated_text)
                         for blk in blk_list:
                             if blk.translation is not None and len(blk.translation) > 0:
-                                need_google_trans = False
+                                need_other_trans = False
                                 break
                 except Exception as ex:
                     if self.logger is not None:
@@ -77,40 +77,57 @@ class BaseLLMTranslation(LLMTranslation):
 
                 print('-------vip trans time =%s' % (time.time() - t1))
 
-            if need_google_trans:
-                print('need google trans')
-                t2 = time.time()
-
-                payload = json.dumps({
-                    'src': language_codes.get(self.source_lang),
-                    'dest': language_codes.get(self.target_lang),
-                    'text_list': [blk.text for blk in blk_list]
-                })
-
-                data = {
-                    'payload': payload,
-                }
-                print(data)
-                csrf_token = secrets.token_hex(16)
-                resp = requests.post('https://www.mangatranslate.com/api/v1/manga/googletranslate', data=data,
-                     cookies={"csrftoken": csrf_token}, headers={"X-CSRF-Token": csrf_token})
-                # resp = requests.post('http://127.0.0.1:8002/api/v1/manga/googletranslate', data=data)
-                google_trans_result = resp.json()
-                if google_trans_result.get('result') == 'success':
-                    print('google_trans success')
-                    content = google_trans_result.get('content')
-                    for blk in blk_list:
-                        tmp_text = content.get(blk.text)
-                        if tmp_text is None or len(tmp_text) == 0 and (blk.text is not None and len(blk.text)>0):
-                            blk.translation = blk.text
-                        else:
-                            blk.translation = content.get(blk.text)
-                else:
-                    print('google trans fail')
+            if need_other_trans:
+                print('need other trans')
+                from ..llm.deepseek import DeepseekTranslation
+                translator = DeepseekTranslation()
+                translator.model_type = 'Deepseek-v3'
+                translator.api_key = 'sk-a54d7718f4fe4efe95fda1bda39307cd'
+                translator.client = OpenAI(api_key=translator.api_key, base_url="https://api.deepseek.com/v1")
+                entire_translated_text = translator._perform_translation(user_prompt, system_prompt, image)
+                try:
+                    if entire_translated_text is not None:
+                        set_texts_from_json(blk_list, entire_translated_text)
+                except Exception as ex:
                     if self.logger is not None:
-                        self.logger.error("google翻译没有成功")
+                        self.logger.warning(f"Deepseek 翻译结果无法使用: {str(ex)} -- {entire_translated_text}")
+                    print(f"Deepseek vip trans set texts error: {str(ex)}")
+                pass
 
-                print('-------google trans time =%s' % (time.time() - t2))
+            # if need_other_trans:
+            #     print('need google trans')
+            #     t2 = time.time()
+            #
+            #     payload = json.dumps({
+            #         'src': language_codes.get(self.source_lang),
+            #         'dest': language_codes.get(self.target_lang),
+            #         'text_list': [blk.text for blk in blk_list]
+            #     })
+            #
+            #     data = {
+            #         'payload': payload,
+            #     }
+            #     print(data)
+            #     csrf_token = secrets.token_hex(16)
+            #     resp = requests.post('https://www.mangatranslate.com/api/v1/manga/googletranslate', data=data,
+            #          cookies={"csrftoken": csrf_token}, headers={"X-CSRF-Token": csrf_token})
+            #     # resp = requests.post('http://127.0.0.1:8002/api/v1/manga/googletranslate', data=data)
+            #     google_trans_result = resp.json()
+            #     if google_trans_result.get('result') == 'success':
+            #         print('google_trans success')
+            #         content = google_trans_result.get('content')
+            #         for blk in blk_list:
+            #             tmp_text = content.get(blk.text)
+            #             if tmp_text is None or len(tmp_text) == 0 and (blk.text is not None and len(blk.text)>0):
+            #                 blk.translation = blk.text
+            #             else:
+            #                 blk.translation = content.get(blk.text)
+            #     else:
+            #         print('google trans fail')
+            #         if self.logger is not None:
+            #             self.logger.error("google翻译没有成功")
+            #
+            #     print('-------google trans time =%s' % (time.time() - t2))
 
             # payload = json.dumps({
             #     'src': language_codes.get(self.source_lang),
